@@ -18,7 +18,7 @@
 \usepackage{multicol}
 
 \title{CSCI 5622 Project Proposal: Predicting Essential Genes in Yeast}
-\author{\textbf{Team:} Nicolas Metts, Matthew Wethington, Rani Schwindt, Carter Tillquist}
+\author{\textbf{Team:} Nicolas Metts, Matthew Pennington, Rani Schwindt, Carter Tillquist}
 \date{30 October 2015}
 
 \begin{document}
@@ -35,7 +35,7 @@ For our analysis, we will be using the genes from \textit{Saccharomyces cerevisi
 
 \section{Baseline}
 
-In 2006, Seringhaus \textit{et al}$^1$ used 14 biological features to train a classifier for predicting essential genes in \textit{S. cerevisiae} and a related organism \textit{S. miktae}. On 4,648 genes in \textit{S. cerevisiae}, the classifier resulted in a precision $\frac{TP}{TP+FP} = 0.69$ and recall $\frac{TP}{TP+FN} = 0.091$. To establish our own baseline, we will incorporate additional features (Section \ref{Data}) and use all compiled features for ?? SVM, knn ??
+In 2006, Seringhaus \textit{et al}$^1$ used 14 biological features to train a classifier for predicting essential genes in \textit{S. cerevisiae} and a related organism \textit{S. miktae}. On 4,648 genes in \textit{S. cerevisiae}, the classifier resulted in a precision $\frac{TP}{TP+FP} = 0.69$ and recall $\frac{TP}{TP+FN} = 0.091$. The classifier used was an average of 7 different classifiers, including logistic regression, Naive Bayes, and AdaBoost.
 
 
 \section{Data} \label{Data}
@@ -44,8 +44,7 @@ We currently have the data from the 14 sequence-related features used in Seringh
 
 
 \section{Techniques}
-SVM, knn?
-Lots of feature engineering to be done
+We plan to compile additional features and perform feature engineering to find an efficient combination. 7 new features have been identified (Section \ref{Data}), and there are additional features that we have extracted from the Gene Ontology.  In addition, we plan to train and test classifiers that were not covered in the Seringhaus study, such as KNN and SVM with various kernels.
 
 
 \section{Timeline}
@@ -66,7 +65,6 @@ Lots of feature engineering to be done
 
 \section{References}
 1. Seringhaus M1, Paccanaro A, Borneman A, Snyder M, Gerstein M. Predicting essential genes in fungal genomes. \textit{Genome Res} 16(9):1126-35.(2006).
-
 
 
 \end{document}
