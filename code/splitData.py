@@ -6,9 +6,9 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Machine learning classifier options')
   parser.add_argument('--pTrain', type=float, default=0.15,
                       help="Separate data into training and testing sets randomly based on the probability of an example being in the training set")
-  parser.add_argument('--trainFile', type=str, default='training_data.csv',
+  parser.add_argument('--trainFile', type=str, default='../data/training_data.csv',
                       help="Name of the resutling training file")
-  parser.add_argument('--testFile', type=str, default='testing_data.csv',
+  parser.add_argument('--testFile', type=str, default='../data/testing_data.csv',
                       help="Name of the resulting testing file")
   parser.add_argument('--dataFile', type=str, default='../data/cerevisiae_compiled_features.csv',
                       help="Name of data file to split")
