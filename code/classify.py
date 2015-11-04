@@ -8,8 +8,10 @@ and for classifying and measuring the accuracy of classifications
 '''
 
 import argparse
+import os
 from csv import DictReader
 import numpy as np
+from sklearn.linear_model import SGDClassifier
 
 ORF = 'ORF'
 MITOCHONDRIA = 'mitochondria'
@@ -62,9 +64,9 @@ def create_feature_file(source, features, out_file_name, train_file):
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--train_file", help="Name of train file",
-                           type=str, default="../data/training_data.csv", required=False)
+                           type=str, default="data/training_data.csv", required=False)
     argparser.add_argument("--test_file", help="Name of test file",
-                           type=str, default="../data/testing_data.csv", required=False)
+                           type=str, default="data/testing_data.csv", required=False)
     argparser.add_argument("--create_features", help="Create a training file",
                            action="store_true")
     argparser.add_argument("--classify", help="Classify using training and test set",
@@ -79,6 +81,41 @@ if __name__ == '__main__':
     argparser.add_argument("--features", help="Features to be used",
                            nargs='+', required=False)
     args = argparser.parse_args()
+    print os.getcwd()
     # Cast to list to keep it all in memory
     train = list(DictReader(open(args.train_file, 'r')))
     test = list(DictReader(open(args.test_file, 'r')))
+    
+    if args.classify:
+        labels = []
+        for line in train:
+            if not line[SGD_ESS] in labels:
+                labels.append(line[SGD_ESS])
+
+        train_features = []
+        for example in train:
+            train_feat = []
+            for feature in args.features:
+                train_feat.append(example[feature])
+            train_features.append(train_feat)
+        x_train = np.array(train_features, dtype=float)
+        
+        test_features = []
+        for example in test:
+            test_feature = []
+            for feature in args.features:
+                test_feature.append(example[feature])
+            test_features.append(test_feature)
+        x_test = np.array(test_features, dtype=float)
+        
+        y_train = np.array(list(labels.index(x[SGD_ESS])
+                         for x in train))
+        
+        y_test = np.array(list(labels.index(x[SGD_ESS])
+                         for x in test))
+
+        # Train classifier
+        lr = SGDClassifier(loss='log', penalty='l2', shuffle=True)
+        clf = lr.fit(x_train, y_train)
+        accuracy = clf.score(x_test, y_test)
+        print "Accuracy: " + str(accuracy)
