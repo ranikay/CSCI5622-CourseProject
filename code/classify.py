@@ -2,10 +2,14 @@
 Created on Nov 3, 2015
 
 @author: Nicolas Metts
+
+This module is responsible for selecting features to be used in classification
+and for classifying and measuring the accuracy of classifications
 '''
 
 import argparse
 from csv import DictReader
+import numpy as np
 
 ORF = 'ORF'
 MITOCHONDRIA = 'mitochondria'
@@ -43,7 +47,17 @@ def create_feature_file(source, features, out_file_name, train_file):
         train_file: A boolean indicating whether this is a training file or not
     """
     # TODO: Implement this!
-    pass
+    data = []
+    for example in source:
+        row = []
+        if not train_file:
+            row.append(example[SGD_ESS])
+        for feature in features:
+            # For now, just appending the features. May need to do some 
+            # pre-processing on the raw data
+            row.append(example[feature])
+        data.append(row)
+    return np.array(data)
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
@@ -55,6 +69,11 @@ if __name__ == '__main__':
                            action="store_true")
     argparser.add_argument("--classify", help="Classify using training and test set",
                            action="store_true")
+    argparser.add_argument("--classifiers", help="A list of classifiers to use",
+                           nargs='+', required=False)
+    argparser.add_argument("--metrics", help="A list of metrics to use",
+                           nargs='+', required=False)
+    # Is this option needed if we're using training and test files?
     argparser.add_argument("--cross_validate", help="Cross validate using training and test set",
                            action="store_true")
     argparser.add_argument("--features", help="Features to be used",
