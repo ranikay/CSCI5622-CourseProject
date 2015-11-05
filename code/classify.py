@@ -17,6 +17,8 @@ from sklearn import cross_validation
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.metrics.classification import precision_score, recall_score,\
     accuracy_score
+import matplotlib.pyplot as plt
+from itertools import compress
 
 # Constants for feature names
 ORF = 'ORF'
@@ -73,6 +75,64 @@ def create_feature_file(source, features, out_file_name, train_file):
         data.append(row)
     return np.array(data)
 
+def pairwise_graphs(data):
+  """
+  This function produces graphs for each pair of features given a list of dictionaries
+  A LOT of graphs are produced. I recommend constraining the keys in the loops if using show()
+  
+  Args:
+    data: a list of dictionaries
+  """
+
+  #first remove ORF
+  for e in data:
+    e.pop(ORF, None)
+
+  keys = data[0].keys()
+  labels = [int(e[SGD_ESS]) for e in data]
+  notLabels = [0 if l else 1 for l in labels]
+  i = 0
+  for x in keys[:2]:
+    X = [float(e[x]) for e in data]
+    xPos = list(compress(X, labels))
+    xNeg = list(compress(X, notLabels))
+    i += 1
+    for y in keys[i:3]:
+      Y = [float(e[y]) for e in data]
+      yPos = list(compress(Y, labels))
+      yNeg = list(compress(Y, notLabels))
+
+      pos = plt.scatter(xPos, yPos, c='r', alpha=0.5)
+      neg = plt.scatter(xNeg, yNeg, c='g', alpha=0.5)
+      title = x+' vs '+y
+      plt.title(title)
+      plt.xlabel(x)
+      plt.ylabel(y)
+      plt.legend((pos, neg), ('Essential', 'Non-Essential'), scatterpoints=1)
+      #plt.show()
+      plt.savefig('../data/graphs/'+title+'.png')
+
+def svm_classify(train_X, train_Y, test_X, test_Y, kernel, reg):
+    """
+    A function to run an SVM classification
+
+    Args:
+        train_X: training feature values
+        train_Y: training labels
+        test_X: testing feature values
+        test_Y: testing labels
+        kernel: a string representing the kernel to use
+        reg: a float representing the regularization parameter
+    """
+
+    clf = SVC(kernel=kernel, C=reg)
+    clf.fit(train_X, train_Y)
+    sc = clf.score(test_X, test_Y)
+    print('SVM score', kernel, reg, sc)
+
+    return clf
+
+
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--data_file", help="Name of train file",
@@ -101,6 +161,7 @@ if __name__ == '__main__':
         # Cast to list to keep it all in memory
         train = list(DictReader(open(args.train_file, 'r')))
         test = list(DictReader(open(args.test_file, 'r')))
+
         labels = []
         for line in train:
             if not line[SGD_ESS] in labels:
@@ -135,7 +196,8 @@ if __name__ == '__main__':
             if classifier == LOG_REG:
                 model = SGDClassifier(loss='log', penalty='l2', shuffle=True)
             elif classifier == SVM:
-                model = SVC(kernel='linear')
+                #model = SVC(kernel='linear')
+                model = svm_classify(x_train, y_train, x_test, y_test, 'linear', 10)
             clf = model.fit(x_train, y_train)
             print "Using classifier " + classifier
             #accuracy = clf.score(x_test, y_test)
