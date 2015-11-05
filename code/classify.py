@@ -11,6 +11,8 @@ import argparse
 from csv import DictReader
 import numpy as np
 import random
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import SGDClassifier
 from sklearn.svm import SVC
 from sklearn import cross_validation
@@ -50,6 +52,7 @@ SGD_ESS = 'SGD_ess'
 LOG_REG = 'log_reg'
 SVM = 'svm'
 ADA_BOOST = 'ada_boost'
+KNN = 'knn'
 # TODO: Add more classifiers
 
 def create_feature_file(source, features, out_file_name, train_file):
@@ -92,12 +95,12 @@ def pairwise_graphs(data):
   labels = [int(e[SGD_ESS]) for e in data]
   notLabels = [0 if l else 1 for l in labels]
   i = 0
-  for x in keys[:2]:
+  for x in keys:
     X = [float(e[x]) for e in data]
     xPos = list(compress(X, labels))
     xNeg = list(compress(X, notLabels))
     i += 1
-    for y in keys[i:3]:
+    for y in keys[i:]:
       Y = [float(e[y]) for e in data]
       yPos = list(compress(Y, labels))
       yNeg = list(compress(Y, notLabels))
@@ -131,11 +134,11 @@ def svm_classify(train_X, train_Y, test_X, test_Y, kernel, reg):
     print('SVM score', kernel, reg, sc)
 
     return clf
-
+  
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--data_file", help="Name of train file",
+    argparser.add_argument("--data_file", help="Name of data file",
                            type=str, default="../data/cerevisiae_compiled_features.csv", 
                            required=False)
     argparser.add_argument("--train_file", help="Name of train file",
@@ -155,6 +158,8 @@ if __name__ == '__main__':
                            action="store_true")
     argparser.add_argument("--features", help="Features to be used",
                            nargs='+', required=False)
+    argparser.add_argument("--scale", help="Scale the data with StandardScale",
+                           action="store_true")
     args = argparser.parse_args()
     
     if args.classify:
@@ -189,6 +194,11 @@ if __name__ == '__main__':
         y_test = np.array(list(labels.index(x[SGD_ESS])
                          for x in test))
 
+        if args.scale:
+            scaler = StandardScaler()
+            x_train = scaler.fit_transform(x_train)
+            x_test = scaler.fit_transform(x_test)
+
         # Train classifier
         for classifier in args.classifiers:
             # TODO: Add some way to specify options for classifiers
@@ -198,6 +208,8 @@ if __name__ == '__main__':
             elif classifier == SVM:
                 #model = SVC(kernel='linear')
                 model = svm_classify(x_train, y_train, x_test, y_test, 'linear', 10)
+            elif classifier == KNN:
+                model = KNeighborsClassifier(n_neighbors=5, algorithm='ball_tree')
             clf = model.fit(x_train, y_train)
             print "Using classifier " + classifier
             #accuracy = clf.score(x_test, y_test)
