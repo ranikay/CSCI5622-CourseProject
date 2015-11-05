@@ -8,13 +8,11 @@ and for classifying and measuring the accuracy of classifications
 '''
 
 import argparse
-import os
 from csv import DictReader
 import numpy as np
 import random
 from sklearn.linear_model import SGDClassifier
 from sklearn.svm import SVC
-import sklearn.metrics
 from sklearn import cross_validation
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.metrics.classification import precision_score, recall_score,\
