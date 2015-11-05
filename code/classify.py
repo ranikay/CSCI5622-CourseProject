@@ -150,6 +150,8 @@ if __name__ == '__main__':
                            nargs='+', required=False, default = ['svm'])
     argparser.add_argument("--metrics", help="A list of metrics to use",
                            nargs='+', required=False)
+    argparser.add_argument("--kernel", help="The kernel to be used for SVM classification",
+                           type=str, default='rbf')
     # Is this option needed if we're using training and test files?
     argparser.add_argument("--cross_validate", help="Cross validate using training and test set",
                            action="store_true")
@@ -228,7 +230,7 @@ if __name__ == '__main__':
             if classifier == LOG_REG:
                 model = SGDClassifier(loss='log', penalty='l2', shuffle=True)
             elif classifier == SVM:
-                model = SVC()
+                model = SVC(kernel=args.kernel)
             elif classifier == ADA_BOOST:
                 model = AdaBoostClassifier()
             clf = model.fit(X_train, y_train)
