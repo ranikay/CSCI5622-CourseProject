@@ -14,10 +14,11 @@ import random
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import SGDClassifier
+from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
 from sklearn import cross_validation
 from sklearn.ensemble import AdaBoostClassifier
-from sklearn.metrics.classification import precision_score, recall_score,\
+from sklearn.metrics import precision_score, recall_score,\
     accuracy_score
 import matplotlib.pyplot as plt
 from itertools import compress
@@ -48,11 +49,13 @@ IN_HOW_MANY_OF_5_PROKS = 'in_how_many_of_5_proks'
 IN_HOW_MANY_OF_6_CLOSE_YEAST = 'in_how_many_of_6_close_yeast'
 SGD_ESS = 'SGD_ess'
 
+
 #Constants for classifier names
 LOG_REG = 'log_reg'
 SVM = 'svm'
 ADA_BOOST = 'ada_boost'
 KNN = 'knn'
+GNB = 'gnb' #Gaussian Naive Bayes
 # TODO: Add more classifiers
 
 def create_feature_file(source, features, out_file_name, train_file):
@@ -159,7 +162,7 @@ if __name__ == '__main__':
     argparser.add_argument("--cross_validate", help="Cross validate using training and test set",
                            action="store_true")
     argparser.add_argument("--features", help="Features to be used",
-                           nargs='+', required=False)
+                           nargs='+', required=True)
     argparser.add_argument("--scale", help="Scale the data with StandardScale",
                            action="store_true")
     args = argparser.parse_args()
@@ -212,6 +215,8 @@ if __name__ == '__main__':
                 model = svm_classify(x_train, y_train, x_test, y_test, 'linear', 10)
             elif classifier == KNN:
                 model = KNeighborsClassifier(n_neighbors=5, algorithm='ball_tree')
+            elif classifier == GNB:
+                model = GaussianNB()
             clf = model.fit(x_train, y_train)
             print "Using classifier " + classifier
             #accuracy = clf.score(x_test, y_test)
@@ -219,8 +224,10 @@ if __name__ == '__main__':
             predictions = clf.predict(x_test)
             precision = precision_score(y_test, predictions, [0, 1])
             recall = recall_score(y_test, predictions, [0, 1])
+            accuracy = accuracy_score(y_test, predictions, [0, 1])
             print "Precision is: " + str(precision)
             print "Recall is: " + str(recall)
+            print "Accuracy is: " + str(accuracy)
     
     elif args.cross_validate:
         # Cast to list to keep it all in memory
