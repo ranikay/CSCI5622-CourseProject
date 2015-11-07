@@ -15,6 +15,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import SGDClassifier
 from sklearn.naive_bayes import GaussianNB
+from sklearn.dummy import DummyClassifier
 from sklearn.svm import SVC
 from sklearn import cross_validation
 from sklearn.ensemble import AdaBoostClassifier
@@ -56,6 +57,7 @@ SVM = 'svm'
 ADA_BOOST = 'ada_boost'
 KNN = 'knn'
 GNB = 'gnb' #Gaussian Naive Bayes
+UNIFORM = 'uniform' #DummyClassifier
 # TODO: Add more classifiers
 
 def create_feature_file(source, features, out_file_name, train_file):
@@ -137,7 +139,7 @@ def svm_classify(train_X, train_Y, test_X, test_Y, kernel, reg):
     print('SVM score', kernel, reg, sc)
 
     return clf
-  
+
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
@@ -161,11 +163,14 @@ if __name__ == '__main__':
     # Is this option needed if we're using training and test files?
     argparser.add_argument("--cross_validate", help="Cross validate using training and test set",
                            action="store_true")
+    argparser.add_argument("--write_to_log", help="Send output to log file",
+                           action="store_true")
     argparser.add_argument("--features", help="Features to be used",
                            nargs='+', required=True)
     argparser.add_argument("--scale", help="Scale the data with StandardScale",
                            action="store_true")
     args = argparser.parse_args()
+    log_message = str(vars(args))
     
     if args.classify:
         # Cast to list to keep it all in memory
@@ -208,15 +213,7 @@ if __name__ == '__main__':
         for classifier in args.classifiers:
             # TODO: Add some way to specify options for classifiers
             model = None
-            if classifier == LOG_REG:
-                model = SGDClassifier(loss='log', penalty='l2', shuffle=True)
-            elif classifier == SVM:
-                #model = SVC(kernel='linear')
-                model = svm_classify(x_train, y_train, x_test, y_test, 'linear', 10)
-            elif classifier == KNN:
-                model = KNeighborsClassifier(n_neighbors=5, algorithm='ball_tree')
-            elif classifier == GNB:
-                model = GaussianNB()
+            
             clf = model.fit(x_train, y_train)
             print "Using classifier " + classifier
             #accuracy = clf.score(x_test, y_test)
@@ -226,8 +223,11 @@ if __name__ == '__main__':
             recall = recall_score(y_test, predictions, [0, 1])
             accuracy = accuracy_score(y_test, predictions, [0, 1])
             print "Precision is: " + str(precision)
+            log_message += " Precision is: " + str(precision)
             print "Recall is: " + str(recall)
+            log_message += " Recall is: " + str(recall)
             print "Accuracy is: " + str(accuracy)
+            log_message += " Accuracy is: " + str(accuracy) + "\n"
     
     elif args.cross_validate:
         # Cast to list to keep it all in memory
@@ -252,12 +252,28 @@ if __name__ == '__main__':
                 model = SVC(kernel=args.kernel)
             elif classifier == ADA_BOOST:
                 model = AdaBoostClassifier()
+            elif classifier == GNB:
+                model = GaussianNB()
+            elif classifier == UNIFORM:
+                model = DummyClassifier()
             clf = model.fit(X_train, y_train)
             print "Using classifier " + classifier
             predictions = clf.predict(X_test)
             accuracy = accuracy_score(y_test, predictions, [0, 1])
             precision = precision_score(y_test, predictions, [0, 1])
             recall = recall_score(y_test, predictions, [0, 1])
-            print "Accuracy is: " + str(accuracy)
+            print "Train/test set sizes: " + str(len(X_train)) + "/" + str(len(X_test))
             print "Precision is: " + str(precision)
+            log_message += " Precision: " + str(precision)
             print "Recall is: " + str(recall)
+            log_message += " Recall: " + str(recall)
+            print "Accuracy is: " + str(accuracy)
+            log_message += " Accuracy: " + str(accuracy) + "\n"
+            true_count = len([1 for p in predictions if p=='1'])
+            actual_count = len([1 for y in y_test if y=='1'])
+            print "True count (prediction/actual): " + str(true_count) + "/" + str(actual_count)
+
+    if (args.write_to_log):
+        f = open("classify_log",'a')
+        f.write(log_message)
+        f.close()
