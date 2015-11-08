@@ -23,6 +23,7 @@ from sklearn.metrics import precision_score, recall_score,\
     accuracy_score
 import matplotlib.pyplot as plt
 from itertools import compress
+from pandas import DataFrame
 
 # Constants for feature names
 ORF = 'ORF'
@@ -60,6 +61,24 @@ GNB = 'gnb' #Gaussian Naive Bayes
 UNIFORM = 'uniform' #DummyClassifier
 # TODO: Add more classifiers
 
+def write_log(out_file_name, args, classifier, accuracy, precision, recall, true_count, actual_count, X_train, X_test):
+    """
+    Function to write results of a run to a file.
+    """
+
+    # Get the kernel type if classifier is SVM, otherwise just put NA
+    get_kernel = lambda x: x == 'svm' and args.kernel or "NA"
+
+    # Log important info
+    with open('../logs/log_table.txt', 'a') as f: f.write("\n")
+    log = DataFrame.from_dict({"A": "\n"+args.data_file,"B": [args.train_file],"C": [args.test_file],"D": [args.create_features],
+                               "E": [classifier],"F": get_kernel(classifier),"G": [args.scale],"H": [len(X_train)],
+                               "I":[len(X_test)],"J": [precision], "K": recall, "L": accuracy,"M": [true_count], "N":[actual_count],
+                               "O": [args.features]})                                         
+        
+    log.to_csv('../logs/log_table.txt', mode = "a", header=False, sep = "\t", index = False)
+
+    
 def create_feature_file(source, features, out_file_name, train_file):
     """
     A function to create a feature file
@@ -170,7 +189,6 @@ if __name__ == '__main__':
     argparser.add_argument("--scale", help="Scale the data with StandardScale",
                            action="store_true")
     args = argparser.parse_args()
-    log_message = str(vars(args))
     
     if args.classify:
         # Cast to list to keep it all in memory
@@ -222,12 +240,15 @@ if __name__ == '__main__':
             precision = precision_score(y_test, predictions, [0, 1])
             recall = recall_score(y_test, predictions, [0, 1])
             accuracy = accuracy_score(y_test, predictions, [0, 1])
+
             print "Precision is: " + str(precision)
-            log_message += " Precision is: " + str(precision)
             print "Recall is: " + str(recall)
-            log_message += " Recall is: " + str(recall)
             print "Accuracy is: " + str(accuracy)
-            log_message += " Accuracy is: " + str(accuracy) + "\n"
+
+            if args.write_to_log:
+            # Write out results as a table to log file
+                write_log(out_file_name = "../logs/log_table.txt", args = args, classifier = classifier, accuracy = accuracy,
+                          precision = precision, recall = recall, true_count = true_count, actual_count = actual_count, X_train = X_train, X_test = X_test)
     
     elif args.cross_validate:
         # Cast to list to keep it all in memory
@@ -264,16 +285,18 @@ if __name__ == '__main__':
             recall = recall_score(y_test, predictions, [0, 1])
             print "Train/test set sizes: " + str(len(X_train)) + "/" + str(len(X_test))
             print "Precision is: " + str(precision)
-            log_message += " Precision: " + str(precision)
             print "Recall is: " + str(recall)
-            log_message += " Recall: " + str(recall)
             print "Accuracy is: " + str(accuracy)
-            log_message += " Accuracy: " + str(accuracy) + "\n"
             true_count = len([1 for p in predictions if p=='1'])
             actual_count = len([1 for y in y_test if y=='1'])
             print "True count (prediction/actual): " + str(true_count) + "/" + str(actual_count)
 
-    if (args.write_to_log):
-        f = open("classify_log",'a')
-        f.write(log_message)
-        f.close()
+
+            if args.write_to_log:
+            # Write out results as a table to log file
+                write_log(out_file_name = "../logs/log_table.txt", args = args, classifier = classifier, accuracy = accuracy,
+                          precision = precision, recall = recall, true_count = true_count, actual_count = actual_count, X_train = X_train, X_test = X_test)
+
+
+
+
