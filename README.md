@@ -8,7 +8,7 @@ An "essential" gene is one which, when absent/deleted, confers a lethal phenotyp
 
 ### Seringhaus data set (data/cerevisiae_compiled_features.csv)
 
-In 2006, Seringhaus _et al_ used 14 biological features to train a classifier for predicting essential genes in _S. cerevisiae_ and a related organism _S. miktae_. On 4,648 genes in \textit{S. cerevisiae}, the classifier resulted in a precision $\frac{TP}{TP+FP} = 0.69$ and recall $\frac{TP}{TP+FN} = 0.091$. The classifier used was an average of 7 different classifiers, including logistic regression, Naive Bayes, and AdaBoost. 
+In 2006, Seringhaus _et al_ used 14 biological features to train a classifier for predicting essential genes in _S. cerevisiae_ and a related organism _S. miktae_. On 4,648 genes in \textit{S. cerevisiae}, the classifier resulted in a precision TP/TP+FP = 0.69 and recall TP/TP+FN = 0.091$. The classifier used was an average of 7 different classifiers, including logistic regression, Naive Bayes, and AdaBoost. 
 
 The data from this paper was provided by the lab [here](http://www.gersteinlab.org/proj/predess/data/Scerevisiae/Compiled/cerevisiae_ALL_noNaN.csv), however, it only includes a complete feature set for 3,500 genes. 
 
@@ -41,7 +41,25 @@ Label = SGD_ess (1 = essential, 0 = nonessential)
 | In_how_many_of_5_proks_BLAST| Number of related genes in 5 prokaryotes (BLAST similarity)|            Integer  |
 | In_how_many_of_6_close_yeast_BLAST| Number of related genes in 6 yeast species (BLAST similarity)|     Integer |
 
+### Rani's data set in progress (data/07Nov15_all_genes_features.txt)
 
+Compiling features for all 5,799 genes in _S. cerevisiae_. Label = Essential (1 = essential, 0 = nonessential). Note that the localization features in this data set are not predicted, but were experimentally determined.
 
+#### Features for 5,799 genes
 
+|       Feature        |      Description                                         |       Raw data format        |
+|----------------------|----------------------------------------------------------|------------------------------|
+| Transcript length    | Length of the transcribe gene including UTRs             |            Integer           |
+| Strand               | Whether gene is on the positive DNA strand (1) or negative (-1)|            1 or -1     |
+| GC                   | [GC content](http://www.pnas.org/content/111/39/E4096.long)|           0 to 1           |
+| Enzyme               | Does the protein have enzymatic activity                 |             0 to 1           |
+| SEG.low.complexity   | Predicted to have [low-complexity regions](http://mendel.imp.ac.at/METHODS/seg.server.html)|0 to 1|
+| Transmembrane.domain | Does the protein have a [transmembrane domain](http://www.cbs.dtu.dk/services/TMHMM/)|0 to 1|
+| Signal.peptide       | Does the protein have a [signal peptide](http://www.cbs.dtu.dk/services/SignalP/)|0 to 1|
+| Coiled.coil          | Does the protein have a [coiled coil](http://www.ch.embnet.org/software/COILS_form.html)|0 to 1|
+| Nucleus              | Does the protein localize to the nucleus                 |            Binary            |
+| Mitochondria         | Does the protein localize to the mitochondria            |            Binary            | 
+| ER                   | Does the protein localize to the ER                      |            Binary            | 
+| Cytoplasm            | Does the protein localize to the cytoplasm               |            Binary            | 
+| Ribosome             | Does the protein localize to the ribosome                |            Binary            | 
 
