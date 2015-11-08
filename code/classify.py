@@ -23,7 +23,6 @@ from sklearn.metrics import precision_score, recall_score,\
     accuracy_score
 import matplotlib.pyplot as plt
 from itertools import compress
-from pandas import DataFrame
 
 # Constants for feature names
 ORF = 'ORF'
