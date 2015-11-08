@@ -8,7 +8,7 @@ An "essential" gene is one which, when absent/deleted, confers a lethal phenotyp
 
 ### Seringhaus data set (data/cerevisiae_compiled_features.csv)
 
-In 2006, Seringhaus _et al_ used 14 biological features to train a classifier for predicting essential genes in _S. cerevisiae_ and a related organism _S. miktae_. On 4,648 genes in \textit{S. cerevisiae}, the classifier resulted in a precision TP/TP+FP = 0.69 and recall TP/TP+FN = 0.091$. The classifier used was an average of 7 different classifiers, including logistic regression, Naive Bayes, and AdaBoost. 
+In 2006, Seringhaus _et al_ used 14 biological features to train a classifier for predicting essential genes in _S. cerevisiae_ and a related organism _S. miktae_. On 4,648 genes in _S. cerevisiae_, the classifier resulted in a precision TP/TP+FP = 0.69 and recall TP/TP+FN = 0.091$. The classifier used was an average of 7 different classifiers, including logistic regression, Naive Bayes, and AdaBoost. 
 
 The data from this paper was provided by the lab [here](http://www.gersteinlab.org/proj/predess/data/Scerevisiae/Compiled/cerevisiae_ALL_noNaN.csv), however, it only includes a complete feature set for 3,500 genes. 
 
@@ -62,4 +62,6 @@ Compiling features for all 5,799 genes in _S. cerevisiae_. Label = Essential (1 
 | ER                   | Does the protein localize to the ER                      |            Binary            | 
 | Cytoplasm            | Does the protein localize to the cytoplasm               |            Binary            | 
 | Ribosome             | Does the protein localize to the ribosome                |            Binary            | 
+
+TO DO: add Gene Ontology terms about protein and gene function
 
