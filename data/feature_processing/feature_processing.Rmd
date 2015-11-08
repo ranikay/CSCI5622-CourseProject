@@ -1,0 +1,165 @@
+---
+title: "Yeast Gene Essentiality Feature Preprocessing"
+author: "Rani"
+date: "November 7, 2015"
+output: html_document
+---
+
+### Collect essentiality data for each gene
+
+To assemble features for genes in the _S. cerevisiae_ genome, we'll start with the data acquired in a high-throughput essentiality screen published in [Giaever et al (2002)](http://www.nature.com/nature/journal/v418/n6896/full/nature00935.html). This study systematically deleted 96% of annotated open reading frames (ORFs) in the genome to determine whether each ORF was essential or not under the same conditions. We first combine the essential and non-essential results from the Giaever study:
+
+```{r}
+# Do processing for original data sets from Sacchromyces Genome Database & put
+# "preprocessed.RData" in /data with everything ready for further analysis.
+# Also save final features in "/data/'[date]_all_genes_features.txt"
+
+####################### INVIABLE (ESSENTIAL) GENES ############################
+
+# Data downloaded from: http://www.yeastgenome.org/observable/inviable/overview
+all_ess = read.table('inviable_annotations.txt', sep = '\t', skip = 8, 
+                          header = T, stringsAsFactors = F)
+
+##################### VIABLE (NON-ESSENTIAL) GENES ############################
+
+# Data downloaded from: http://www.yeastgenome.org/observable/viable/overview
+all_noness = read.table('viable_annotations.txt', sep = '\t', skip = 8, 
+                        header = T, stringsAsFactors = F, quote = "")
+
+######################## COMBINING ALL GENES ##################################
+
+# Combine essential and non-essential genes into one table
+all_ess.noness = rbind(all_ess, all_noness)
+names(all_ess.noness)[2] = 'Ensembl.Gene.ID'
+
+# Use only the data from the Giaever (2002) paper
+all_ess.noness = all_ess.noness[grep('Giaever', all_ess.noness$Reference),]
+
+# Store essential and non-essential gene names
+ess_genes = all_ess.noness[all_ess.noness$Phenotype == 'inviable ',1]
+noness_genes = all_ess.noness[all_ess.noness$Phenotype == 'viable ',1]
+all_genes = c(ess_genes, noness_genes)
+
+# Confirm that none of the genes are double listed
+# sum(noness_genes %in% ess_genes)    # 0
+
+# Add binary essentiality label
+all_ess.noness$Essential = as.numeric(all_ess.noness$Phenotype == 'inviable ')
+
+# Discard extraneous columns from data set
+all_ess.noness = all_ess.noness[,c(1,2,11)]
+```
+
+Data preview:
+
+```{r, echo = FALSE}
+head(all_ess.noness)
+```
+
+### Add more features
+
+Add transcript length, strand, GC content, GO terms, enzyme activity, complexity, transmembrane domain, signal peptide, and coiled coil as features.
+
+```{r, message = FALSE}
+
+######################## ENSEMBL FEATURES #####################################
+# Read additional features from Ensembl data base
+# http://uswest.ensembl.org/biomart/martview/88049627908bd2a3fac7b361055f0a4d
+ensembl_features = read.table('biomart_features.txt', sep = '\t', 
+                           stringsAsFactors = F, quote = "", header = T)
+ensembl_features[is.na(ensembl_features)] <- 0
+names(ensembl_features) = c('Ensembl.Gene.ID', 
+                            'Transcript.length', 
+                            'Strand', 
+                            'GC.content', 
+                            'GO.domain', 
+                            'GO.term.accession', 
+                            'GO.term.name', 
+                            'GO.term.evidence.code', 
+                            'Enzyme', 
+                            'SEG.low.complexity', 
+                            'Transmembrane.domain', 
+                            'Signal.peptide', 
+                            'Coiled.coil')
+
+# Binarize whether the gene has a transmembrane domain, coiled coil, signal peptide, 
+# low complexity, or enzyme activity
+for (col in 9:13){
+  ensembl_features[,col] = as.numeric(ensembl_features[,col] != "")
+}
+
+# Add these finished features, plus a few others, to the main table
+if (!require("plyr")) {
+  install.packages("plyr", dependencies = TRUE)
+  library(plyr)
+}
+all_ess.noness_withFeatures = unique(join(all_ess.noness, ensembl_features[,c(1:4,9:13)]))
+```
+
+### Aggregate localization features
+
+To get the localization data for each gene, I needed to use both the Gene Ontology annotations as well as data from the Yeast GFP database.
+
+```{r}
+
+############################ LOCALIZATION #####################################
+
+# Get the localization features for 3,620 of the 5,779 genes
+localization = ensembl_features[ensembl_features$GO.domain == 'cellular_component' &
+                                  ensembl_features$GO.term.evidence.code != 'ND',c(1,5:8)]
+mapped = unique(all_ess.noness_withFeatures[all_ess.noness_withFeatures$Ensembl.Gene.ID %in% localization$Ensembl.Gene.ID,2])
+
+# Top 10 localization annotations
+head(sort(table(localization$GO.term.name), decreasing = T), 10)
+
+# Binarize each feature with logic to obtain unique biological info from each
+Nucleus = unique(localization[localization$GO.term.name == 'nucleus' | grepl('nuclear',localization$GO.term.name),1])
+Mitochondria = unique(localization[localization$GO.term.name == 'mitochondrion' | grepl('mitochondrial',localization$GO.term.name),1])
+ER = unique(localization[grepl('endoplasmic reticulum',localization$GO.term.name),1])
+Cytoplasm = unique(localization[grepl('cytoplasm',localization$GO.term.name) | grepl('cytosol',localization$GO.term.name),1])
+Ribosome = unique(localization[grepl('ribosome',localization$GO.term.name),1])
+
+# Add Gene Ontology localization features
+localization_features = c('Nucleus', 'Mitochondria', 'ER', 'Cytoplasm', 'Ribosome')
+for (feature in localization_features){
+  all_ess.noness_withFeatures$new = as.numeric(all_ess.noness_withFeatures$Ensembl.Gene.ID %in% get(feature))
+  names(all_ess.noness_withFeatures)[ncol(all_ess.noness_withFeatures)] = feature
+}
+
+# Get the localization features for the remaining 2,159 genes that didn't map to GO
+unmapped = unique(all_ess.noness_withFeatures[!(all_ess.noness_withFeatures$Ensembl.Gene.ID %in% localization$Ensembl.Gene.ID),2])
+
+# Get localization experiment data from http://yeastgfp.yeastgenome.org/
+localdb = read.table('localization.txt', stringsAsFactors = F, sep = '\t', quote = "", header = T)
+localdb = localdb[localdb$GFP_tagged == 'tagged',]
+#sum(localdb$yORF %in% unmapped) # 2,138 of the 2,159 unmapped ORFs were tagged in the Yeast GFP Database
+still_unmapped = unmapped[!(unmapped %in% localdb$yORF)]
+
+# Extract meaningful features
+Nucleus = unique(localdb[localdb$nucleus,1])
+Mitochondria = unique(localdb[localdb$mitochondrion,1])
+ER = unique(localdb[localdb$ER,1])
+Cytoplasm = unique(localdb[localdb$cytoplasm,1])
+# Did not have ribosome
+
+# Add new localization info to main table
+localization_features = c('Nucleus', 'Mitochondria', 'ER', 'Cytoplasm')
+for (feature in localization_features){
+  all_ess.noness_withFeatures[all_ess.noness_withFeatures$Ensembl.Gene.ID %in% get(feature),feature] <- 1
+}
+
+all_ess.noness_withFeatures = na.omit(all_ess.noness_withFeatures)
+```
+
+20 genes still did not map to either database, so I may have to dig around for these:
+
+```{r}
+all_ess.noness_withFeatures[all_ess.noness_withFeatures$Ensembl.Gene.ID %in% still_unmapped,c(1:3)]
+#write.table(all_ess.noness_withFeatures, '../07Nov15_all_genes_features.txt', row.names = F, quote = F, sep = '\t')
+```
+
+### Current features
+
+```{r, echo = FALSE}
+names(all_ess.noness_withFeatures)
+```
