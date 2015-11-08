@@ -3,54 +3,45 @@ Course project for CU Boulder CSCI 5622: Machine Learning with Dr. Jordan Boyd-G
 
 **Team members**: Nicolas Metts, Matthew Pennington, Rani Schwindt and Carter Tillquist
 
-### (Quick intro for group members, will be formalized for the write-up)
-An "essential" gene is one which, when absent/deleted, confers a lethal phenotype (the yeast dies). We're proposing that gene essentiality can be predicted using a weighted combination of features, like different aspects of a gene’s sequence or its protein product to find the pattern that makes a gene essential. There are lots of motivating reasons to perform an analysis like this. Here we're using all genes from *Saccharomyces cerevisiae*, which is very well studied and characterized, but other yeast species are not well characterized at all.  Therefore, a pattern that helps us determine gene essentiality in yeast can be applied to a related organism in order to get an idea of its essential genes. Also, [many yeast genes have homologs in the human](http://downloads.yeastgenome.org/curation/literature/functional_complementation.tab).
+### Introduction
+An "essential" gene is one which, when absent/deleted, confers a lethal phenotype. We propose that gene essentiality can be predicted using a weighted combination of features. Here we use data sets with genes from *Saccharomyces cerevisiae*, a well characterized yeast species. 
 
-### Features we currently have for all genes:
-* Localization: nucleus, mitochondria, cytoplasm, ER, vacuole or other
-* Chromosome
-* Chromosome position
-* Number of transmembrane helices
-* Length of protein product measured in amino acids
-* Hydrophobicity or hydrophilicity
-* [Effective number of codons](http://en.wikipedia.org/wiki/Effective_number_of_codons)
-* [Codon adaptation index](http://en.wikipedia.org/wiki/Codon_Adaptation_Index)
-* GC content
-* Proportion of codons one third-base away from a stop codon
-* Proportion of rare amino acids in translated ORF
-* Number of [BLAST hits](https://en.wikipedia.org/wiki/BLAST) in prokaryotes
-* Number of BLAST hits in all yeast species
-* Number of BLAST hits in 6 close yeast species
-* Number of protein interaction partners
+### Seringhaus data set (data/cerevisiae_compiled_features.csv)
 
-|       Feature        | Current format |     Transformed format?     |
-|----------------------|----------------|-----------------------------|
-| Localization         | Text or binary | 'nucleus', 'cytoplasm' etc  |
-|       Chromosome     |      Integer   |    'Chr1', 'Chr2'           |
-| Chromosome position  |     Integer    |     'Low', 'Med', 'High'    |
-| Length aa            |     Integer    |   'Short', 'Med', 'Long'    |
-|  TM helices          |     Integer    | 'LowTM', 'MedTM', 'HighTM'  |
-| Hydrophobicity       |    -inf to inf | 'Hydrophobic', 'Hydrophilic'|
-| Number codons        |     Integer    |                             |   
-| Codon adaptation ind |    0 to 1      |                             |
-|    GC content        |     0 to 1     |                             |
-| BLAST hits in yeast  |      Integer   |                             | 
-| BLAST hits in 6 yeast|      Integer   |                             | 
-|BLAST hits in proks   |      Integer   |                             |
-| intxn_partners       |      Integer   |                             |
+In 2006, Seringhaus _et al_ used 14 biological features to train a classifier for predicting essential genes in _S. cerevisiae_ and a related organism _S. miktae_. On 4,648 genes in \textit{S. cerevisiae}, the classifier resulted in a precision $\frac{TP}{TP+FP} = 0.69$ and recall $\frac{TP}{TP+FN} = 0.091$. The classifier used was an average of 7 different classifiers, including logistic regression, Naive Bayes, and AdaBoost. 
+
+The data from this paper was provided by the lab [here](http://www.gersteinlab.org/proj/predess/data/Scerevisiae/Compiled/cerevisiae_ALL_noNaN.csv), however, it only includes a complete feature set for 3,500 genes. 
+
+Label = SGD_ess (1 = essential, 0 = nonessential)
+
+#### Seringhaus features for 3,500 genes
+
+|       Feature        |      Description                                         |       Raw data format        |
+|----------------------|----------------------------------------------------------|------------------------------|
+| Mitochondria         | Does the protein localize to the mitochondria (predicted)|            Binary            | 
+| Cytoplasm            | Does the protein localize to the cytoplasm (predicted)   |            Binary            | 
+| ER                   | Does the protein localize to the ER (predicted)          |            Binary            | 
+| Nucleus              | Does the protein localize to the nucleus (predicted)     |            Binary            | 
+| Vacuole              | Does the protein localize to the vacuole (predicted)     |            Binary            | 
+| Other                | Does the protein localize somewhere else (predicted)     |            Binary            | 
+| CAI                  | [Codon adaptation index](http://en.wikipedia.org/wiki/Codon_Adaptation_Index)|  0 to 1  | 
+| Nc                   | [Effective number of codons](http://en.wikipedia.org/wiki/Effective_number_of_codons)| Integer |
+| GC                   | [GC content](http://www.pnas.org/content/111/39/E4096.long)|   0 to 1        |
+| L_aa                 | Number of amino acids in protein (predicted)             |            Integer           |
+| Gravy                | Hydrophobicity (positive) or hydrophilicity (negative)   |           -inf to inf        |
+| DovEXPR              | Unknown                                                  |          0 to inf            |
+| BLAST_hits_in_yeast  | Number of related genes in yeast (BLAST similarity)      |            Integer           |
+| INTXN_partners       | Number of protein interaction partners                   |            Integer           |
+| Chromosome           | Which chromosome (yeast have 16) is the gene on          |            Integer           |
+| Chr_position         | Where does the gene start relative to the whole chromosome|            0 to 1           |
+| Intron               | Unknown                                                  |            Binary            |
+| CLOSE_STOP_RATIO     | % of codons one third-base away from stop codon          |            0 to 1            |
+| RARE_AA_RATIO        | % of rare amino acids in translated ORF                  |            0 to 1            |
+| TM_HELIX             | Number of transmembrane helices (predicted)              |            Integer           |
+| In_how_many_of_5_proks_BLAST| Number of related genes in 5 prokaryotes (BLAST similarity)|            Integer  |
+| In_how_many_of_6_close_yeast_BLAST| Number of related genes in 6 yeast species (BLAST similarity)|     Integer |
 
 
-### Previous baseline
 
-A [paper by Seringhaus et al](http://genome.cshlp.org/content/16/9/1126.long) compiled 3 datasets: Wysocki (1999), Vandenbol (2000) and Stevenson (2001) and used a Bayesian framework to predict essential genes in *S. cerevisiae* and *S. miktae* (another type of yeast). 
-
-**From their abstract:**
-
-"Essential genes are required for an organism's viability, and the ability to identify these genes in pathogens is crucial to directed drug development. Predicting essential genes through computational methods is appealing because it circumvents expensive and difficult experimental screens. Most such prediction is based on homology mapping to experimentally verified essential genes in model organisms. We present here a different approach, one that relies exclusively on sequence features of a gene to estimate essentiality and offers a promising way to identify essential genes in unstudied or uncultured organisms. We identified 14 characteristic sequence features potentially associated with essentiality, such as localization signals, codon adaptation, GC content, and overall hydrophobicity. Using the well-characterized baker's yeast Saccharomyces cerevisiae, we employed a simple Bayesian framework to measure the correlation of each of these features with essentiality. We then employed the 14 features to learn the parameters of a machine learning classifier capable of predicting essential genes. We trained our classifier on known essential genes in *S. cerevisiae* and applied it to the closely related and relatively unstudied yeast Saccharomyces mikatae. We assessed predictive success in two ways: First, we compared all of our predictions with those generated by homology mapping between these two species. Second, we verified a subset of our predictions with eight in vivo knockouts in *S. mikatae*, and we present here the first experimentally confirmed essential genes in this species." -Seringhaus et al. Genome Research (2002)
-
-### TO DO:
-* Figure out how to best represent features
-* Feature engineering
-* Pick machine learning algorithm (based on feature representation chosen)
 
 
