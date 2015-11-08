@@ -61,7 +61,8 @@ GNB = 'gnb' #Gaussian Naive Bayes
 UNIFORM = 'uniform' #DummyClassifier
 # TODO: Add more classifiers
 
-def write_log(out_file_name, args, classifier, accuracy, precision, recall, true_count, actual_count, X_train, X_test):
+def write_log(out_file_name, args, classifier, accuracy, precision, recall,
+              true_count, actual_count, X_train, X_test):
     """
     Function to write results of a run to a file.
     """
@@ -71,12 +72,13 @@ def write_log(out_file_name, args, classifier, accuracy, precision, recall, true
 
     # Log important info
     with open('../logs/log_table.txt', 'a') as f: f.write("\n")
-    log = DataFrame.from_dict({"A": "\n"+args.data_file,"B": [args.train_file],"C": [args.test_file],"D": [args.create_features],
-                               "E": [classifier],"F": get_kernel(classifier),"G": [args.scale],"H": [len(X_train)],
-                               "I":[len(X_test)],"J": [precision], "K": recall, "L": accuracy,"M": [true_count], "N":[actual_count],
-                               "O": [args.features]})                                         
-        
-    log.to_csv('../logs/log_table.txt', mode = "a", header=False, sep = "\t", index = False)
+    log = [str(args.data_file),str(args.train_file),str(args.test_file),str(args.create_features),
+           str(classifier), str(get_kernel(classifier)),str(args.scale), str(len(X_train)), str(len(X_test)),
+           str(precision), str(recall), str(accuracy), str(true_count), str(actual_count), str([args.features])]
+    line = "\t".join(log)
+
+    with open('../logs/log_table.txt', 'a') as f:
+        f.write(line)
 
     
 def create_feature_file(source, features, out_file_name, train_file):
