@@ -252,9 +252,20 @@ if __name__ == '__main__':
                 model = SVC(kernel=args.kernel)
             elif classifier == ADA_BOOST:
                 model = AdaBoostClassifier()
+            elif classifier == KNN:
+                model = KNeighborsClassifier(n_neighbors=5, algorithm='ball_tree')
+            elif classifier == GNB:
+                model = GaussianNB()
             clf = model.fit(X_train, y_train)
             print "Using classifier " + classifier
             predictions = clf.predict(X_test)
+            pos_predictions = [x for x in predictions if x == 1]
+            
+            # In Python, all data types have a boolean value. An empty list is false
+            if not pos_predictions:
+                print "No positive predictions"
+            else:
+                print "Number of positive predictions: " + str(len(pos_predictions))
             accuracy = accuracy_score(y_test, predictions, [0, 1])
             precision = precision_score(y_test, predictions, [0, 1])
             recall = recall_score(y_test, predictions, [0, 1])
