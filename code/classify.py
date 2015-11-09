@@ -19,8 +19,7 @@ from sklearn.dummy import DummyClassifier
 from sklearn.svm import SVC
 from sklearn import cross_validation
 from sklearn.ensemble import AdaBoostClassifier
-from sklearn.metrics import precision_score, recall_score,\
-    accuracy_score
+from sklearn.metrics import precision_score, recall_score, accuracy_score
 import matplotlib.pyplot as plt
 from itertools import compress
 
@@ -60,7 +59,7 @@ GNB = 'gnb' #Gaussian Naive Bayes
 UNIFORM = 'uniform' #DummyClassifier
 # TODO: Add more classifiers
 
-def write_log(out_file_name, args, classifier, accuracy, precision, recall,
+def write_log(args, classifier, accuracy, precision, recall,
               true_count, actual_count, X_train, X_test):
     """
     Function to write results of a run to a file.
@@ -104,41 +103,41 @@ def create_feature_file(source, features, out_file_name, train_file):
     return np.array(data)
 
 def pairwise_graphs(data):
-  """
-  This function produces graphs for each pair of features given a list of dictionaries
-  A LOT of graphs are produced. I recommend constraining the keys in the loops if using show()
-  
-  Args:
-    data: a list of dictionaries
-  """
+    """
+    This function produces graphs for each pair of features given a list of dictionaries
+    A LOT of graphs are produced. I recommend constraining the keys in the loops
+    if using show()
 
-  #first remove ORF
-  for e in data:
-    e.pop(ORF, None)
+    Args:
+        data: a list of dictionaries
+"""
+    #first remove ORF
+    for e in data:
+        e.pop(ORF, None)
 
-  keys = data[0].keys()
-  labels = [int(e[SGD_ESS]) for e in data]
-  notLabels = [0 if l else 1 for l in labels]
-  i = 0
-  for x in keys:
-    X = [float(e[x]) for e in data]
-    xPos = list(compress(X, labels))
-    xNeg = list(compress(X, notLabels))
-    i += 1
+    keys = data[0].keys()
+    labels = [int(e[SGD_ESS]) for e in data]
+    notLabels = [0 if l else 1 for l in labels]
+    i = 0
+    for x in keys:
+        X = [float(e[x]) for e in data]
+        xPos = list(compress(X, labels))
+        xNeg = list(compress(X, notLabels))
+        i += 1
     for y in keys[i:]:
-      Y = [float(e[y]) for e in data]
-      yPos = list(compress(Y, labels))
-      yNeg = list(compress(Y, notLabels))
+        Y = [float(e[y]) for e in data]
+        yPos = list(compress(Y, labels))
+        yNeg = list(compress(Y, notLabels))
 
-      pos = plt.scatter(xPos, yPos, c='r', alpha=0.5)
-      neg = plt.scatter(xNeg, yNeg, c='g', alpha=0.5)
-      title = x+' vs '+y
-      plt.title(title)
-      plt.xlabel(x)
-      plt.ylabel(y)
-      plt.legend((pos, neg), ('Essential', 'Non-Essential'), scatterpoints=1)
-      #plt.show()
-      plt.savefig('../data/graphs/'+title+'.png')
+        pos = plt.scatter(xPos, yPos, c='r', alpha=0.5)
+        neg = plt.scatter(xNeg, yNeg, c='g', alpha=0.5)
+        title = x+' vs '+y
+        plt.title(title)
+        plt.xlabel(x)
+        plt.ylabel(y)
+        plt.legend((pos, neg), ('Essential', 'Non-Essential'), scatterpoints=1)
+        #plt.show()
+        plt.savefig('../data/graphs/'+title+'.png')
 
 def svm_classify(train_X, train_Y, test_X, test_Y, kernel, reg):
     """
@@ -160,6 +159,52 @@ def svm_classify(train_X, train_Y, test_X, test_Y, kernel, reg):
 
     return clf
 
+def __print_and_log_results(clf, x_test, y_test):
+    predictions = clf.predict(x_test)
+    accuracy = accuracy_score(y_test, predictions, [0, 1])
+    precision = precision_score(y_test, predictions, [0, 1])
+    recall = recall_score(y_test, predictions, [0, 1])
+    print "Train/test set sizes: " + str(len(X_train)) + "/" + str(len(x_test))
+    print "Precision is: " + str(precision)
+    print "Recall is: " + str(recall)
+    print "Accuracy is: " + str(accuracy)
+    true_count = len([1 for p in predictions if p=='1'])
+    actual_count = len([1 for y in y_test if y=='1'])
+    print "True count (prediction/actual): " + str(true_count) + "/" + str(actual_count)
+    if args.write_to_log:
+    # Write out results as a table to log file
+        write_log(out_file_name = "../logs/log_table.txt", args = args,
+                    classifier = classifier, accuracy = accuracy,
+                    precision = precision, recall = recall,
+                    true_count = true_count, actual_count = actual_count,
+                    X_train = X_train, X_test = X_test)
+
+def __get_classifier_model(classifier, args):
+    """
+    Convenience function for obtaining a classification model
+
+    Args:
+        classifier (str): A string indicating the name of the classifier
+        args: An arguments object
+
+    Returns:
+        A classification model based on the given classifier string
+    """
+    # Make SGD Logistic Regression model the default
+    model = SGDClassifier(loss='log', penalty='l2', shuffle=True)
+    if classifier == LOG_REG:
+        model = SGDClassifier(loss='log', penalty='l2', shuffle=True)
+    elif classifier == SVM:
+        model = SVC(kernel=args.kernel)
+    elif classifier == ADA_BOOST:
+        model = AdaBoostClassifier()
+    elif classifier == KNN:
+        model = KNeighborsClassifier(n_neighbors=5, algorithm='ball_tree')
+    elif classifier == GNB:
+        model = GaussianNB()
+    elif classifier == UNIFORM:
+        model = DummyClassifier()
+    return model
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
@@ -231,25 +276,10 @@ if __name__ == '__main__':
         # Train classifier
         for classifier in args.classifiers:
             # TODO: Add some way to specify options for classifiers
-            model = None
-            
+            model = __get_classifier_model(classifier, args)
             clf = model.fit(x_train, y_train)
             print "Using classifier " + classifier
-            #accuracy = clf.score(x_test, y_test)
-            #print "Accuracy: " + str(accuracy)
-            predictions = clf.predict(x_test)
-            precision = precision_score(y_test, predictions, [0, 1])
-            recall = recall_score(y_test, predictions, [0, 1])
-            accuracy = accuracy_score(y_test, predictions, [0, 1])
-
-            print "Precision is: " + str(precision)
-            print "Recall is: " + str(recall)
-            print "Accuracy is: " + str(accuracy)
-
-            if args.write_to_log:
-            # Write out results as a table to log file
-                write_log(out_file_name = "../logs/log_table.txt", args = args, classifier = classifier, accuracy = accuracy,
-                          precision = precision, recall = recall, true_count = true_count, actual_count = actual_count, X_train = X_train, X_test = X_test)
+            __print_and_log_results(clf, x_test, y_test)
     
     elif args.cross_validate:
         # Cast to list to keep it all in memory
@@ -265,39 +295,10 @@ if __name__ == '__main__':
             train_features.append(train_feat)
         x_train = np.array(train_features, dtype=float)
         rand_int = random.randint(1, len(data))
-        X_train, X_test, y_train, y_test = cross_validation.train_test_split(x_train, labels, test_size=0.1, random_state=13)
+        X_train, X_test, y_train, y_test = cross_validation.train_test_split \
+            (x_train,labels, test_size=0.1, random_state=13)
         for classifier in args.classifiers:
-            model = None
-            if classifier == LOG_REG:
-                model = SGDClassifier(loss='log', penalty='l2', shuffle=True)
-            elif classifier == SVM:
-                model = SVC(kernel=args.kernel)
-            elif classifier == ADA_BOOST:
-                model = AdaBoostClassifier()
-            elif classifier == GNB:
-                model = GaussianNB()
-            elif classifier == UNIFORM:
-                model = DummyClassifier()
+            model = __get_classifier_model(classifier, args)
             clf = model.fit(X_train, y_train)
             print "Using classifier " + classifier
-            predictions = clf.predict(X_test)
-            accuracy = accuracy_score(y_test, predictions, [0, 1])
-            precision = precision_score(y_test, predictions, [0, 1])
-            recall = recall_score(y_test, predictions, [0, 1])
-            print "Train/test set sizes: " + str(len(X_train)) + "/" + str(len(X_test))
-            print "Precision is: " + str(precision)
-            print "Recall is: " + str(recall)
-            print "Accuracy is: " + str(accuracy)
-            true_count = len([1 for p in predictions if p=='1'])
-            actual_count = len([1 for y in y_test if y=='1'])
-            print "True count (prediction/actual): " + str(true_count) + "/" + str(actual_count)
-
-
-            if args.write_to_log:
-            # Write out results as a table to log file
-                write_log(out_file_name = "../logs/log_table.txt", args = args, classifier = classifier, accuracy = accuracy,
-                          precision = precision, recall = recall, true_count = true_count, actual_count = actual_count, X_train = X_train, X_test = X_test)
-
-
-
-
+            __print_and_log_results(clf, X_test, y_test)
