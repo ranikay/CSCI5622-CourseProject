@@ -33,6 +33,11 @@ RARE_AA_RATIO = 'rare_aa_ratio'
 TM_HELIX = 'tm_helix'
 IN_HOW_MANY_OF_5_PROKS = 'in_how_many_of_5_proks'
 IN_HOW_MANY_OF_6_CLOSE_YEAST = 'in_how_many_of_6_close_yeast'
+#added features
+CHRM_AND_POS = 'chrm_and_pos' #chromosome and postion 
+LOC_AND_5_PROKS = 'loc_and_5_proks' #combine location and how many of 5 proks
+YEAST_AND_PROKS = 'yeast_and_proks' #combine the number of matches in yeast and proks
+#label
 SGD_ESS = 'SGD_ess'
 
 
@@ -46,7 +51,8 @@ def calc_fit(model, metric, train_x, train_y, test_x, test_y, p):
   predictions = clf.predict(test_x)
   if metric == 'precision': return precision_score(test_y, predictions, [0,1])
   elif metric == 'recall': return recall_score(test_y, predictions, [0,1])
-  return accuracy_score(test_y, predictions, [0,1])
+  elif metric == 'accuracy': return accuracy_score(test_y, predictions, [0,1])
+  return precision_score(test_y, predictions, [0,1])+recall_score(test_y, predictions, [0,1])+accuracy_score(test_y, predictions, [0,1])
 
 #simple single point crossover. we could try other types
 def recombine(pop, fits):
@@ -81,7 +87,7 @@ if __name__ == '__main__':
   argparser = argparse.ArgumentParser()
   argparser.add_argument('--classifier', help='the ml technique to use',
                          type=str, default='knn')
-  argparser.add_argument('--metric', help='fitness metric. precision, recall, or accuracy',
+  argparser.add_argument('--metric', help='fitness metric. precision, recall, accuracy, or all',
                          type=str, default='precision')
   argparser.add_argument("--data_file", help="Name of data file",
                          type=str, default="../data/cerevisiae_compiled_features.csv", required=False)
@@ -104,14 +110,33 @@ if __name__ == '__main__':
   train = list(DictReader(open(args.train_file, 'r')))
   test = list(DictReader(open(args.test_file, 'r')))
 
+  #generate additional features to add and test
+  #these can be added to the data file later
+  #combine chromosome and location: CHROMOSOME + CHR_POSITION
+  #chrm_lengths = [230218, 813184, 316620, 1531933, 576874, 270161, 1090940, 562643, 439888, 745751, 666816, 1078177, 924431, 784333, 1091291, 948066, 85779, 6318] #chrm 1-16, mito, 2-micron.. how are the last two reprented numerically? are they relevant at all?
+  #location and how many of 5 proks: mitochondria = 10, cytoplasm = 20, er = 30, nucelus = 40, vacuoule = 50, otehr = 60
+  #loc_dic = {MITOCHONDRIA: 10, CYTOPLASM: 20, ER: 30, NUCLEUS: 40, VACUOLE: 50, OTHER: 60}
+  #how many hits in yeast and proks
+
+  #add new features to test and train
+  for d in train:
+    d[CHRM_AND_POS] = float(d[CHROMOSOME]) + float(d[CHR_POSITION])
+    d[LOC_AND_5_PROKS] = list(compress([10, 20, 30, 40, 50, 60], [d[e] for e in [MITOCHONDRIA, CYTOPLASM, ER, NUCLEUS, VACUOLE, OTHER]]))[0] + float(d[IN_HOW_MANY_OF_5_PROKS])
+    d[YEAST_AND_PROKS] = float(d[IN_HOW_MANY_OF_6_CLOSE_YEAST]) + float(d[IN_HOW_MANY_OF_5_PROKS])
+  for d in test:
+    d[CHRM_AND_POS] = float(d[CHROMOSOME]) + float(d[CHR_POSITION])
+    d[LOC_AND_5_PROKS] = list(compress([10, 20, 30, 40, 50, 60], [d[e] for e in [MITOCHONDRIA, CYTOPLASM, ER, NUCLEUS, VACUOLE, OTHER]]))[0] + float(d[IN_HOW_MANY_OF_5_PROKS])
+    d[YEAST_AND_PROKS] = float(d[IN_HOW_MANY_OF_6_CLOSE_YEAST]) + float(d[IN_HOW_MANY_OF_5_PROKS])
+
   train_x = [[float(e[f]) for f in e if f != SGD_ESS and f != ORF] for e in train]
   train_y = [float(e[SGD_ESS]) for e in train]
   test_x = [[float(e[f]) for f in e if f != SGD_ESS and f != ORF] for e in test]
   test_y = [float(e[SGD_ESS]) for e in test]
 
   #ORF not included
-  features = [MITOCHONDRIA, CYTOPLASM, ER, NUCLEUS, VACUOLE, OTHER, CAI, NC, GC, L_GA, GRAVY, DOV_EXPR, BLAST_HITS_IN_YEAST, INTXN_PARTNERS, CHROMOSOME, CHR_POSITION, INTRON, CLOSE_STOP_RATIO, RARE_AA_RATIO, TM_HELIX, IN_HOW_MANY_OF_5_PROKS, IN_HOW_MANY_OF_6_CLOSE_YEAST]
+  features = [MITOCHONDRIA, CYTOPLASM, ER, NUCLEUS, VACUOLE, OTHER, CAI, NC, GC, L_GA, GRAVY, DOV_EXPR, BLAST_HITS_IN_YEAST, INTXN_PARTNERS, CHROMOSOME, CHR_POSITION, INTRON, CLOSE_STOP_RATIO, RARE_AA_RATIO, TM_HELIX, IN_HOW_MANY_OF_5_PROKS, IN_HOW_MANY_OF_6_CLOSE_YEAST, CHRM_AND_POS, LOC_AND_5_PROKS, YEAST_AND_PROKS]
 
+  #
   if args.scale:
     print('Scale data')
     scaler = StandardScaler()
@@ -147,10 +172,15 @@ if __name__ == '__main__':
   pop_with_fits = sorted(zip([calc_fit(model, args.metric, train_x, train_y, test_x, test_y, p) for p in pop], pop), key=lambda x: x[0], reverse=True)
   for (f, p) in pop_with_fits:
     print(p, f)
-  print('max encountered', m[1], m[0])
+  print('max encountered', m[1], list(compress(features, m[1])), m[0])
+  if args.metric == 'all':
+    print('max precision: ', calc_fit(model, 'precision', train_x, train_y, test_x, test_y, m[1]))
+    print('max accuracy: ', calc_fit(model, 'accuracy', train_x, train_y, test_x, test_y, m[1]))
+    print('max recall: ', calc_fit(model, 'recall', train_x, train_y, test_x, test_y, m[1]))
   print('all features', 'precision', calc_fit(model, 'precision', train_x, train_y, test_x, test_y, [1]*len(features)))
   print('all features', 'accuracy', calc_fit(model, 'accuracy', train_x, train_y, test_x, test_y, [1]*len(features)))
   print('all features', 'recall', calc_fit(model, 'recall', train_x, train_y, test_x, test_y, [1]*len(features)))
+  print('all features', 'all', calc_fit(model, 'all', train_x, train_y, test_x, test_y, [1]*len(features)))
   print('Done')
 
 

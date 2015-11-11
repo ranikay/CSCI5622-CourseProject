@@ -1,4 +1,3 @@
-ORF was excluded from the tests below
 python feature_ga.py --scale --metric precision
 all feature score: 0.51449275362318836
 max score: 0.57377049180327866
@@ -22,4 +21,29 @@ max accuracy: 0.78997289972899731
 max recall: 0.2806201550387597
 features: ['cytoplasm', 'er', 'nucleus', 'other', 'NC', 'GC', 'L_aa', 'Gravy', 'intxn_partners', 'chromosome', 'chr_position', 'intron', 'close_stop_ratio', 'tm_helix', 'in_how_many_of_5_proks']
 
+#################################################################################
+###With additional features CHRM_AND_POS, LOC_AND_5_PROKS, and YEAST_AND_PROKS###
+#################################################################################
+python feature_ga.py --scale --metric precision
+all feature score: 0.50943396226415094
+max score: 0.57939914163090134
+features: ['cytoplasm', 'nucleus', 'vacuole', 'other', 'L_aa', 'Gravy', 'chr_position', 'intron', 'rare_aa_ratio', 'chrm_and_pos', 'loc_and_5_proks', 'yeast_and_proks']
+
+python feature_ga.py --scale --metric accuracy
+all feature score: 0.78319783197831983
+max score: 0.78895663956639561
+features: ['mitochondria', 'cytoplasm', 'nucleus', 'vacuole', 'other', 'L_aa', 'Gravy', 'BLAST_hits_in_yeast', 'intxn_partners', 'chr_position', 'intron', 'close_stop_ratio', 'tm_helix', 'in_how_many_of_5_proks', 'in_how_many_of_6_close_yeast', 'chrm_and_pos', 'loc_and_5_proks']
+
+python feature_ga.py --scale --metric recall
+all feature score: 0.20930232558139536
+max score: 0.34883720930232559
+features: ['nucleus', 'NC', 'L_aa', 'BLAST_hits_in_yeast', 'intxn_partners', 'chromosome', 'chr_position', 'intron', 'in_how_many_of_5_proks', 'chrm_and_pos', 'loc_and_5_proks']
+
+python feature_ga.py --scale --metric all
+all feature score: 1.5019341198238663
+max score: 1.582568629829924
+max precision: 0.53745928338762217
+max accuracy: 0.78929539295392959
+max recall: 0.2558139534883721
+features: ['mitochondria', 'cytoplasm', 'er', 'GC', 'L_aa', 'Gravy', 'intron', 'close_stop_ratio', 'tm_helix', 'in_how_many_of_5_proks', 'in_how_many_of_6_close_yeast', 'chrm_and_pos', 'loc_and_5_proks']
 

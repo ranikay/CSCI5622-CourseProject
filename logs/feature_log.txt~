@@ -1,0 +1,25 @@
+ORF was excluded from the tests below
+python feature_ga.py --scale --metric precision
+all feature score: 0.51449275362318836
+max score: 0.57377049180327866
+features: ['cytoplasm', 'er', 'vacuole', 'other', 'NC', 'GC', 'L_aa', 'Gravy', 'DovEXPR', 'intxn_partners', 'chromosome', 'close_stop_ratio', 'tm_helix', 'in_how_many_of_5_proks', 'in_how_many_of_6_close_yeast']
+
+python feature_ga.py --scale --metric accuracy
+all feature score: 0.78421409214092141
+max score: 0.78895663956639561
+features: ['er', 'other', 'GC', 'L_aa', 'DovEXPR', 'intxn_partners', 'chromosome', 'intron', 'tm_helix', 'in_how_many_of_5_proks']
+
+python feature_ga.py --scale --metric recall
+all feature score: 0.22015503875968992
+max score: 0.34418604651162793
+features: ['nucleus', 'vacuole', 'other', 'L_aa', 'Gravy', 'BLAST_hits_in_yeast', 'intxn_partners', 'chromosome', 'close_stop_ratio', 'tm_helix', 'in_how_many_of_5_proks']
+
+python feature_ga.py --scale --metric all
+all feature score: 1.5188618845237998
+max score: 1.6076850428983209
+max precision: 0.5370919881305638
+max accuracy: 0.78997289972899731
+max recall: 0.2806201550387597
+features: ['cytoplasm', 'er', 'nucleus', 'other', 'NC', 'GC', 'L_aa', 'Gravy', 'intxn_partners', 'chromosome', 'chr_position', 'intron', 'close_stop_ratio', 'tm_helix', 'in_how_many_of_5_proks']
+
+
