@@ -10,7 +10,7 @@ if __name__ == "__main__":
                       help="Name of the resutling training file")
   parser.add_argument('--testFile', type=str, default='../data/testing_data.csv',
                       help="Name of the resulting testing file")
-  parser.add_argument('--dataFile', type=str, default='../data/cerevisiae_compiled_features.csv',
+  parser.add_argument('--dataFile', type=str, default='../data/large_yeast_data.csv',
                       help="Name of data file to split")
   args = parser.parse_args()
 
