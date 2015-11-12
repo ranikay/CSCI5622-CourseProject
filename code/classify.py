@@ -52,7 +52,7 @@ CHRM_AND_POS = 'chrm_and_pos' #chromosome and postion
 LOC_AND_5_PROKS = 'loc_and_5_proks' #combine location and how many of 5 proks
 YEAST_AND_PROKS = 'yeast_and_proks' #combine the number of matches in yeast and proks
 #label
-SGD_ESS = 'SGD_ess'
+ESSENTIAL = 'Essential'
 
 
 #Constants for classifier names
@@ -64,8 +64,8 @@ GNB = 'gnb' #Gaussian Naive Bayes
 UNIFORM = 'uniform' #DummyClassifier
 # TODO: Add more classifiers
 
-def write_log(args, classifier, accuracy, precision, recall,
-              true_count, actual_count, X_train, X_test):
+def write_log(out_file_name, args, classifier, accuracy, precision, recall,
+              true_count, actual_count, X_train, X_test, all_features):
     """
     Function to write results of a run to a file.
     """
@@ -74,13 +74,14 @@ def write_log(args, classifier, accuracy, precision, recall,
     get_kernel = lambda x: x == 'svm' and args.kernel or "NA"
 
     # Log important info
-    with open('../logs/log_table.txt', 'a') as f: f.write("\n")
-    log = [str(args.data_file),str(args.train_file),str(args.test_file),str(args.create_features),
+    log = ['\n'+str(args.data_file),str(args.train_file),str(args.test_file),str(args.create_features),
            str(classifier), str(get_kernel(classifier)),str(args.scale), str(len(X_train)), str(len(X_test)),
-           str(precision), str(recall), str(accuracy), str(true_count), str(actual_count), str([args.features])]
+           str(precision), str(recall), str(accuracy), str(true_count), str(actual_count)]
+    # Include a TRUE/FALSE column for each feature
+    log.append('\t'.join([str(feature in args.features) for feature in all_features]))
     line = "\t".join(log)
 
-    with open('../logs/log_table.txt', 'a') as f:
+    with open(out_file_name, 'a') as f:
         f.write(line)
 
     
@@ -99,7 +100,7 @@ def create_feature_file(source, features, out_file_name, train_file):
     for example in source:
         row = []
         if not train_file:
-            row.append(example[SGD_ESS])
+            row.append(example[ESSENTIAL])
         for feature in features:
             # For now, just appending the features. May need to do some 
             # pre-processing on the raw data
@@ -121,7 +122,7 @@ def pairwise_graphs(data):
         e.pop(ORF, None)
 
     keys = data[0].keys()
-    labels = [int(e[SGD_ESS]) for e in data]
+    labels = [int(e[ESSENTIAL]) for e in data]
     notLabels = [0 if l else 1 for l in labels]
     i = 0
     for x in keys:
@@ -156,7 +157,7 @@ def single_var_graphs(data):
         e.pop(ORF, None)
 
     keys = data[0].keys()
-    labels = [int(e[SGD_ESS]) for e in data]
+    labels = [int(e[ESSENTIAL]) for e in data]
     notLabels = [0 if l else 1 for l in labels]
     i = 0
     for x in keys[:5]: #
@@ -175,6 +176,7 @@ def single_var_graphs(data):
         plt.legend((pos, neg), ('Essential', 'Non-Essential'), scatterpoints=1)
         plt.show()
         #plt.savefig('../data/graphs/'+title+'.png')
+        
 
 def svm_classify(train_X, train_Y, test_X, test_Y, kernel, reg):
     """
@@ -196,7 +198,7 @@ def svm_classify(train_X, train_Y, test_X, test_Y, kernel, reg):
 
     return clf
 
-def __print_and_log_results(clf, x_test, y_test):
+def __print_and_log_results(clf, x_test, y_test, out_file_name, all_features):
     predictions = clf.predict(x_test)
     accuracy = accuracy_score(y_test, predictions, [0, 1])
     precision = precision_score(y_test, predictions, [0, 1])
@@ -210,11 +212,11 @@ def __print_and_log_results(clf, x_test, y_test):
     print "True count (prediction/actual): " + str(true_count) + "/" + str(actual_count)
     if args.write_to_log:
     # Write out results as a table to log file
-        write_log(out_file_name = "../logs/log_table.txt", args = args,
+        write_log(out_file_name = out_file_name, args = args,
                     classifier = classifier, accuracy = accuracy,
                     precision = precision, recall = recall,
                     true_count = true_count, actual_count = actual_count,
-                    X_train = X_train, X_test = X_test)
+                    X_train = X_train, X_test = X_test, all_features = all_features)
 
 def __get_classifier_model(classifier, args):
     """
@@ -272,17 +274,26 @@ if __name__ == '__main__':
     argparser.add_argument("--scale", help="Scale the data with StandardScale",
                            action="store_true")
     args = argparser.parse_args()
-    
+
+    if 'small_yeast_data' in args.data_file:
+        out_file_name = '../logs/small_yeast_data_log.txt'
+    if 'large_yeast_data' in args.data_file:
+        out_file_name = '../logs/large_yeast_data_log.txt'
 
     if args.classify:
+        # Store column names as features, except ORF and Essential
+        all_features = DictReader(open(args.train_file, 'r')).fieldnames
+        all_features.remove('ORF')
+        all_features.remove('Essential')
+        
         # Cast to list to keep it all in memory
         train = list(DictReader(open(args.train_file, 'r')))
         test = list(DictReader(open(args.test_file, 'r')))
 
         labels = []
         for line in train:
-            if not line[SGD_ESS] in labels:
-                labels.append(line[SGD_ESS])
+            if not line[ESSENTIAL] in labels:
+                labels.append(line[ESSENTIAL])
 
         train_features = []
         for example in train:
@@ -300,10 +311,10 @@ if __name__ == '__main__':
             test_features.append(test_feature)
         x_test = np.array(test_features, dtype=float)
         
-        y_train = np.array(list(labels.index(x[SGD_ESS])
+        y_train = np.array(list(labels.index(x[ESSENTIAL])
                          for x in train))
         
-        y_test = np.array(list(labels.index(x[SGD_ESS])
+        y_test = np.array(list(labels.index(x[ESSENTIAL])
                          for x in test))
 
         if args.scale:
@@ -317,14 +328,20 @@ if __name__ == '__main__':
             model = __get_classifier_model(classifier, args)
             clf = model.fit(x_train, y_train)
             print "Using classifier " + classifier
-            __print_and_log_results(clf, x_test, y_test)
+            __print_and_log_results(clf, x_test, y_test, out_file_name, all_features)
     
     elif args.cross_validate:
+
+        # Store column names as features, except ORF and Essential
+        all_features = DictReader(open(args.data_file, 'rU')).fieldnames
+        all_features.remove('ORF')
+        all_features.remove('Essential')
         # Cast to list to keep it all in memory
         data = list(DictReader(open(args.data_file, 'rU')))
+        
         labels = []
         for line in data:
-            labels.append(line[SGD_ESS])
+            labels.append(line[ESSENTIAL])
         train_features = []
         for example in data:
             train_feat = []
@@ -343,5 +360,5 @@ if __name__ == '__main__':
             model = __get_classifier_model(classifier, args)
             clf = model.fit(X_train, y_train)
             print "Using classifier " + classifier
-            __print_and_log_results(clf, X_test, y_test)
+            __print_and_log_results(clf, X_test, y_test, out_file_name, all_features)
 
