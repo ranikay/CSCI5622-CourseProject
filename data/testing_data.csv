@@ -1,4 +1,4 @@
-ORF,mitochondria,cytoplasm,er,nucleus,vacuole,other,CAI,NC,GC,L_aa,Gravy,DovEXPR,BLAST_hits_in_yeast,intxn_partners,chromosome,chr_position,intron,close_stop_ratio,rare_aa_ratio,tm_helix,in_how_many_of_5_proks,in_how_many_of_6_close_yeast,SGD_ess
+ORF,Mitochondria,Cytoplasm,ER,Nucleus,Vacuole,Other.location,CAI,NC,GC.content,Protein.length,Gravy.score,DovEXPR,BLAST.hits_in_yeast,Interaction.partners,Chromosome,Chr.position,Intron,Close.stop.ratio,Rare.aa_ratio,TM.helix,in_how_many_of_5_proks,in_how_many_of_6_close_yeast,Essential
 YAL002W,0,0,0,0,0,1,0.134,50.93,0.372,1274,-0.090345,0.2,0,24,1,0.62427944,0,0.059607843,0.066666667,0,0,3,0
 YAL005C,0,1,0,0,0,0,0.709,28.36,0.44,642,-0.426012,13.4,31,13,1,0.614392514,0,0.020217729,0.026438569,0,1,6,0
 YAL007C,0,0,1,0,0,0,0.235,49.46,0.372,215,0.147907,2.4,1,13,1,0.600986955,0,0.050925926,0.037037037,2,0,4,0
