@@ -246,7 +246,7 @@ def __get_classifier_model(classifier, args):
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--data_file", help="Name of data file",
-                           type=str, default="../data/cerevisiae_compiled_features.csv", 
+                           type=str, default="../data/small_yeast_data.csv", 
                            required=False)
     argparser.add_argument("--train_file", help="Name of train file",
                            type=str, default="../data/training_data.csv", required=False)
