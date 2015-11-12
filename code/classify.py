@@ -47,6 +47,11 @@ RARE_AA_RATIO = 'rare_aa_ratio'
 TM_HELIX = 'tm_helix'
 IN_HOW_MANY_OF_5_PROKS = 'in_how_many_of_5_proks'
 IN_HOW_MANY_OF_6_CLOSE_YEAST = 'in_how_many_of_6_close_yeast'
+#added features
+CHRM_AND_POS = 'chrm_and_pos' #chromosome and postion 
+LOC_AND_5_PROKS = 'loc_and_5_proks' #combine location and how many of 5 proks
+YEAST_AND_PROKS = 'yeast_and_proks' #combine the number of matches in yeast and proks
+#label
 SGD_ESS = 'SGD_ess'
 
 
@@ -110,7 +115,7 @@ def pairwise_graphs(data):
 
     Args:
         data: a list of dictionaries
-"""
+    """
     #first remove ORF
     for e in data:
         e.pop(ORF, None)
@@ -124,20 +129,52 @@ def pairwise_graphs(data):
         xPos = list(compress(X, labels))
         xNeg = list(compress(X, notLabels))
         i += 1
-    for y in keys[i:]:
-        Y = [float(e[y]) for e in data]
-        yPos = list(compress(Y, labels))
-        yNeg = list(compress(Y, notLabels))
+        for y in keys[i:]:
+            Y = [float(e[y]) for e in data]
+            yPos = list(compress(Y, labels))
+            yNeg = list(compress(Y, notLabels))
 
-        pos = plt.scatter(xPos, yPos, c='r', alpha=0.5)
-        neg = plt.scatter(xNeg, yNeg, c='g', alpha=0.5)
-        title = x+' vs '+y
+            pos = plt.scatter(xPos, yPos, c='r', alpha=0.5)
+            neg = plt.scatter(xNeg, yNeg, c='g', alpha=0.5)
+            title = x+' vs '+y
+            plt.title(title)
+            plt.xlabel(x)
+            plt.ylabel(y)
+            plt.legend((pos, neg), ('Essential', 'Non-Essential'), scatterpoints=1)
+            #plt.show()
+            plt.savefig('../data/graphs/'+title+'.png')
+
+def single_var_graphs(data):
+    """
+    This function is for visualizing single variables against labels
+
+    Args:
+        data: a list of dictionaries
+    """
+    #first remove ORF
+    for e in data:
+        e.pop(ORF, None)
+
+    keys = data[0].keys()
+    labels = [int(e[SGD_ESS]) for e in data]
+    notLabels = [0 if l else 1 for l in labels]
+    i = 0
+    for x in keys[:5]: #
+        X = [float(e[x]) for e in data]
+        xPos = list(compress(X, labels))
+        xNeg = list(compress(X, notLabels))
+        
+        title = x+' Essentiality'
+        axes = plt.gca()
+        axes.set_ylim([-1,2])
+        pos = plt.scatter(xPos, [1] * len(xPos), c='r', alpha=0.5)
+        neg = plt.scatter(xNeg, [0] * len(xNeg), c='g', alpha=0.5)
         plt.title(title)
         plt.xlabel(x)
-        plt.ylabel(y)
+        plt.ylabel('Essentiality')
         plt.legend((pos, neg), ('Essential', 'Non-Essential'), scatterpoints=1)
-        #plt.show()
-        plt.savefig('../data/graphs/'+title+'.png')
+        plt.show()
+        #plt.savefig('../data/graphs/'+title+'.png')
 
 def svm_classify(train_X, train_Y, test_X, test_Y, kernel, reg):
     """
@@ -236,6 +273,7 @@ if __name__ == '__main__':
                            action="store_true")
     args = argparser.parse_args()
     
+
     if args.classify:
         # Cast to list to keep it all in memory
         train = list(DictReader(open(args.train_file, 'r')))
@@ -297,8 +335,13 @@ if __name__ == '__main__':
         rand_int = random.randint(1, len(data))
         X_train, X_test, y_train, y_test = cross_validation.train_test_split \
             (x_train,labels, test_size=0.1, random_state=13)
+        if args.scale:
+            scaler = StandardScaler()
+            X_train = scaler.fit_transform(X_train)
+            X_test = scaler.fit_transform(X_test)
         for classifier in args.classifiers:
             model = __get_classifier_model(classifier, args)
             clf = model.fit(X_train, y_train)
             print "Using classifier " + classifier
             __print_and_log_results(clf, X_test, y_test)
+
