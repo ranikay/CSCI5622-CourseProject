@@ -27,26 +27,27 @@ from itertools import compress
 
 # Constants for feature names
 ORF = 'ORF'
-MITOCHONDRIA = 'mitochondria'
-CYTOPLASM = 'cytoplasm'
-ER = 'er'
-NUCLEUS = 'nucleus'
-VACUOLE = 'vacuole'
-OTHER = 'other'
+MITOCHONDRIA = 'Mitochondria'
+CYTOPLASM = 'Cytoplasm'
+ER = 'ER'
+NUCLEUS = 'Nucleus'
+VACUOLE = 'Vacuole'
+OTHER = 'Other.location'
 CAI = 'CAI'
 NC = 'NC'
-GC = 'GC'
+GC = 'GC.content'
+PROTEIN_LENGTH = 'Protein.length'
 L_GA = 'L_aa'
 GRAVY = 'Gravy'
 DOV_EXPR = 'DovEXPR'
-BLAST_HITS_IN_YEAST = 'BLAST_hits_in_yeast'
-INTXN_PARTNERS = 'intxn_partners'
-CHROMOSOME = 'chromosome'
-CHR_POSITION = 'chr_position'
-INTRON = 'intron'
-CLOSE_STOP_RATIO = 'close_stop_ratio'
-RARE_AA_RATIO = 'rare_aa_ratio'
-TM_HELIX = 'tm_helix'
+BLAST_HITS_IN_YEAST = 'BLAST.hits_in_yeast'
+INTERACTION_PARTNERS = 'interaction_partners'
+CHROMOSOME = 'Chromosome'
+CHR_POSITION = 'Chr.position'
+INTRON = 'Intron'
+CLOSE_STOP_RATIO = 'Close.stop_ratio'
+RARE_AA_RATIO = 'Rare.aa_ratio'
+TM_HELIX = 'TM.helix'
 IN_HOW_MANY_OF_5_PROKS = 'in_how_many_of_5_proks'
 IN_HOW_MANY_OF_6_CLOSE_YEAST = 'in_how_many_of_6_close_yeast'
 #added features
@@ -203,14 +204,14 @@ def svm_classify(train_X, train_Y, test_X, test_Y, kernel, reg):
 def __print_and_log_results(clf, x_test, y_test, out_file_name, all_features):
     predictions = clf.predict(x_test)
     accuracy = accuracy_score(y_test, predictions, [0, 1])
-    #precision = precision_score(y_test, predictions, [0, 1])
-    #recall = recall_score(y_test, predictions, [0, 1])
+    precision = precision_score(y_test, predictions, [0, 1])
+    recall = recall_score(y_test, predictions, [0, 1])
     print "Train/test set sizes: " + str(len(X_train)) + "/" + str(len(x_test))
-    #print "Precision is: " + str(precision)
-    #print "Recall is: " + str(recall)
+    print "Precision is: " + str(precision)
+    print "Recall is: " + str(recall)
     print "Accuracy is: " + str(accuracy)
-    true_count = len([1 for p in predictions if p=='1'])
-    actual_count = len([1 for y in y_test if y=='1'])
+    true_count = len([1 for p in predictions if p==1])
+    actual_count = len([1 for y in y_test if y==1])
     print "True count (prediction/actual): " + str(true_count) + "/" + str(actual_count)
     if args.write_to_log:
     # Write out results as a table to log file
@@ -371,7 +372,7 @@ if __name__ == '__main__':
         
         labels = []
         for line in data:
-            labels.append(line[ESSENTIAL])
+            labels.append(int(line[ESSENTIAL]))
         train_features = []
         for example in data:
             train_feat = []
