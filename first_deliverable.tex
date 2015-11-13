@@ -1,0 +1,43 @@
+\documentclass[11pt, oneside]{article}   	% use "amsart" instead of "article" for AMSLaTeX format
+\usepackage[
+top    = 1.25in,
+bottom = 1.25in,
+left   = 1.0in,
+right  = 1.0in]{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   		% ... or a4paper or a5paper or ... 
+%\geometry{landscape}                		% Activate for rotated page geometry
+%\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}				% Use pdf, png, jpg, or eps§ with pdflatex; use eps in DVI mode
+								% TeX will automatically convert eps --> pdf in pdflatex		
+\usepackage{amssymb}
+
+%SetFonts
+
+%SetFonts
+
+
+\title{CSCI 5622 Project Update: Predicting Essential Genes in Yeast}
+\author{\textbf{Team:} Nicolas Metts, Matthew Pennington, Rani Schwindt, Carter Tillquist}
+\date{}							% Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+%\section{}
+%\subsection{}
+
+\paragraph{Progress so far:}
+\begin{itemize}
+\item  We have a working Python script that allows using multiple classifiers (Logistic Regression with Stochastic Gradient Descent, SVM, AdaBoost, KNN, Gaussian Naive Bayes) and any set of available features.
+\item The script is also configurable to allow using pre made test/train set files or using cross-validation to split the data into training and test sets.
+\item The metrics being used are accuracy, precision, and recall.
+\item The script also outputs classification results into a log file so we can keep track of our progress
+\item We are currently able to obtain results that are an improvement over the baseline.
+\item We curated a new, expanded data set (5,700 genes and 50 features) in order to make the results more generalizable and to explore features not previously used for this type of classification.\item The proposed timeline remains attainable, so no changes have been made.\end{itemize}
+\paragraph{Remaining to be done:}
+\begin{itemize}
+\item Comparing results of various classifiers according to the three metrics (accuracy, precision, and recall), as well as what set of features give the best performance on these metrics.
+\item Deciding on the best set of features and classifiers to be used for each metric. All feature engineering will be completed by December 1st. The entire team agrees that this is a reasonable goal.
+\item Consider methods of combining classifier results to improve overall predictions and reduce overfitting.
+\item Complete error analysis, including any visualizations that may be informative \item Analysis of results will begin after December 1st. Analysis will be completed by December 8th, and the remaining week will be spent formally documenting the analysis in the form of a write up and presentation.
+\end{itemize}
+\end{document}  
