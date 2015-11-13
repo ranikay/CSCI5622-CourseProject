@@ -19,6 +19,8 @@ from sklearn.dummy import DummyClassifier
 from sklearn.svm import SVC
 from sklearn import cross_validation
 from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import VotingClassifier
+#from mlxtend.classifier import EnsembleClassifier
 from sklearn.metrics import precision_score, recall_score, accuracy_score
 import matplotlib.pyplot as plt
 from itertools import compress
@@ -201,11 +203,11 @@ def svm_classify(train_X, train_Y, test_X, test_Y, kernel, reg):
 def __print_and_log_results(clf, x_test, y_test, out_file_name, all_features):
     predictions = clf.predict(x_test)
     accuracy = accuracy_score(y_test, predictions, [0, 1])
-    precision = precision_score(y_test, predictions, [0, 1])
-    recall = recall_score(y_test, predictions, [0, 1])
+    #precision = precision_score(y_test, predictions, [0, 1])
+    #recall = recall_score(y_test, predictions, [0, 1])
     print "Train/test set sizes: " + str(len(X_train)) + "/" + str(len(x_test))
-    print "Precision is: " + str(precision)
-    print "Recall is: " + str(recall)
+    #print "Precision is: " + str(precision)
+    #print "Recall is: " + str(recall)
     print "Accuracy is: " + str(accuracy)
     true_count = len([1 for p in predictions if p=='1'])
     actual_count = len([1 for y in y_test if y=='1'])
@@ -228,22 +230,45 @@ def __get_classifier_model(classifier, args):
 
     Returns:
         A classification model based on the given classifier string
+
     """
+    
     # Make SGD Logistic Regression model the default
-    model = SGDClassifier(loss='log', penalty='l2', shuffle=True)
-    if classifier == LOG_REG:
+    if(args.vote == 'none'):
         model = SGDClassifier(loss='log', penalty='l2', shuffle=True)
-    elif classifier == SVM:
-        model = SVC(kernel=args.kernel)
-    elif classifier == ADA_BOOST:
-        model = AdaBoostClassifier()
-    elif classifier == KNN:
-        model = KNeighborsClassifier(n_neighbors=5, algorithm='ball_tree')
-    elif classifier == GNB:
-        model = GaussianNB()
-    elif classifier == UNIFORM:
-        model = DummyClassifier()
+        if classifier == LOG_REG:
+            model = SGDClassifier(loss='log', penalty='l2', shuffle=True)
+        elif classifier == SVM:
+            model = SVC(kernel=args.kernel)
+        elif classifier == ADA_BOOST:
+            model = AdaBoostClassifier()
+        elif classifier == KNN:
+            model = KNeighborsClassifier(n_neighbors=5, algorithm='ball_tree')
+        elif classifier == GNB:
+            model = GaussianNB()
+        elif classifier == UNIFORM:
+            model = DummyClassifier()
+    else:
+        #We might consider passing all individual classifiers back to compare to the ensemble
+        #See the last line in http://scikit-learn.org/stable/modules/ensemble.html#id24
+        clfs = []
+        for clf in args.classifiers:
+            if clf == LOG_REG:
+                clfs.append((clf,SGDClassifier(loss='log', penalty='l2', shuffle=True)))
+            elif clf == SVM:
+                clfs.append((clf,SVC(kernel=args.kernel)))
+            elif clf == ADA_BOOST:
+                clfs.append((clf, AdaBoostClassifier()))
+            elif clf == KNN:
+                clfs.append((clf,KNeighborsClassifier(n_neighbors=5, algorithm='ball_tree')))
+            elif clf == GNB:
+                clfs.append((clf, GaussianNB()))
+            elif clf == UNIFORM:
+                clfs.append((clf, DummyClassifier()))
+        model = VotingClassifier(estimators=clfs, voting=args.vote)
+
     return model
+        
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
@@ -273,8 +298,13 @@ if __name__ == '__main__':
                            nargs='+', required=True)
     argparser.add_argument("--scale", help="Scale the data with StandardScale",
                            action="store_true")
+    argparser.add_argument("--vote", help="Ensemble classifier. 'hard' = majority, 'soft' = averge",
+                           type=str, default='none')
     args = argparser.parse_args()
 
+    voting_methods = ['none', 'hard', 'soft']
+    assert args.vote in voting_methods, "--vote must be one of 'none', 'hard', 'soft'"
+    
     if 'small_yeast_data' in args.data_file:
         out_file_name = '../logs/small_yeast_data_log.txt'
     if 'large_yeast_data' in args.data_file:
@@ -356,9 +386,14 @@ if __name__ == '__main__':
             scaler = StandardScaler()
             X_train = scaler.fit_transform(X_train)
             X_test = scaler.fit_transform(X_test)
-        for classifier in args.classifiers:
-            model = __get_classifier_model(classifier, args)
+        if args.vote == 'none':
+            for classifier in args.classifiers:
+                model = __get_classifier_model(classifier, args)
+                clf = model.fit(X_train, y_train)
+                print "Using classifier " + classifier
+                __print_and_log_results(clf, X_test, y_test, out_file_name, all_features)
+        else:
+            model = __get_classifier_model('none',args)
             clf = model.fit(X_train, y_train)
-            print "Using classifier " + classifier
+            print "Using classifier: vote "+ args.vote + " with ", args.classifiers
             __print_and_log_results(clf, X_test, y_test, out_file_name, all_features)
-
