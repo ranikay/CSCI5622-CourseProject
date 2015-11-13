@@ -299,7 +299,7 @@ if __name__ == '__main__':
                            nargs='+', required=True)
     argparser.add_argument("--scale", help="Scale the data with StandardScale",
                            action="store_true")
-    argparser.add_argument("--vote", help="Ensemble classifier. 'hard' = majority, 'soft' = averge",
+    argparser.add_argument("--vote", help="Ensemble classifier. 'hard' = majority, 'soft' = average",
                            type=str, default='none')
     args = argparser.parse_args()
 
