@@ -201,12 +201,12 @@ def svm_classify(train_X, train_Y, test_X, test_Y, kernel, reg):
 
     return clf
 
-def __print_and_log_results(clf, x_test, y_test, out_file_name, all_features):
+def __print_and_log_results(clf, x_train, x_test, y_test, out_file_name, all_features):
     predictions = clf.predict(x_test)
     accuracy = accuracy_score(y_test, predictions, [0, 1])
     precision = precision_score(y_test, predictions, [0, 1])
     recall = recall_score(y_test, predictions, [0, 1])
-    print "Train/test set sizes: " + str(len(X_train)) + "/" + str(len(x_test))
+    print "Train/test set sizes: " + str(len(x_train)) + "/" + str(len(x_test))
     print "Precision is: " + str(precision)
     print "Recall is: " + str(recall)
     print "Accuracy is: " + str(accuracy)
@@ -219,7 +219,7 @@ def __print_and_log_results(clf, x_test, y_test, out_file_name, all_features):
                     classifier = classifier, accuracy = accuracy,
                     precision = precision, recall = recall,
                     true_count = true_count, actual_count = actual_count,
-                    X_train = X_train, X_test = X_test, all_features = all_features)
+                    X_train = x_train, X_test = test_X, all_features = all_features)
 
 def __get_classifier_model(classifier, args):
     """
@@ -359,7 +359,7 @@ if __name__ == '__main__':
             model = __get_classifier_model(classifier, args)
             clf = model.fit(x_train, y_train)
             print "Using classifier " + classifier
-            __print_and_log_results(clf, x_test, y_test, out_file_name, all_features)
+            __print_and_log_results(clf, x_train, x_test, y_test, out_file_name, all_features)
     
     elif args.cross_validate:
 
@@ -392,9 +392,9 @@ if __name__ == '__main__':
                 model = __get_classifier_model(classifier, args)
                 clf = model.fit(X_train, y_train)
                 print "Using classifier " + classifier
-                __print_and_log_results(clf, X_test, y_test, out_file_name, all_features)
+                __print_and_log_results(clf, X_train, X_test, y_test, out_file_name, all_features)
         else:
             model = __get_classifier_model('none',args)
             clf = model.fit(X_train, y_train)
             print "Using classifier: vote "+ args.vote + " with ", args.classifiers
-            __print_and_log_results(clf, X_test, y_test, out_file_name, all_features)
+            __print_and_log_results(clf, X_train, X_test, y_test, out_file_name, all_features)
