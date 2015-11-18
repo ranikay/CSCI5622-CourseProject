@@ -47,3 +47,30 @@ max accuracy: 0.78929539295392959
 max recall: 0.2558139534883721
 features: ['mitochondria', 'cytoplasm', 'er', 'GC', 'L_aa', 'Gravy', 'intron', 'close_stop_ratio', 'tm_helix', 'in_how_many_of_5_proks', 'in_how_many_of_6_close_yeast', 'chrm_and_pos', 'loc_and_5_proks']
 
+####################################
+###Using the large yeast data set###
+####################################
+python feature_ga.py --scale --metric precision
+all feature score: 0.44327176781002636
+max score: 0.5457413249211357
+features: ['Nitrogens', 'Val', 'Carbons', 'Instability.index', 'Enzyme', 'Gravy.score', 'Cys', 'Asp', 'Hydrogens', 'Signal.peptide', 'Phe', 'Met', 'Nucleus', 'Leu', 'Oxygens', 'PI', 'Asn', 'Strand', 'Codon.Bias', 'Transmembrane.domain', 'Coiled.coil', 'GC.content', 'Trp', 'FOP.Score', 'Ser', 'Gly', 'Tyr', 'Cytoplasm']
+
+python feature_ga.py --scale --metric accuracy
+all feature score: 0.80085261875761271
+max score: 0.82034104750304504 
+features: ['Val', 'Carbons', 'Interaction.partners', 'Sulphurs', 'Hydrogens', 'Signal.peptide', 'Arg', 'Phe', 'Glu', 'Nucleus', 'Leu', 'PI', 'Ile', 'Codon.Bias', 'Transmembrane.domain', 'Coiled.coil', 'Mw', 'His', 'Trp', 'FOP.Score', 'Essential', 'ER', 'EC.number', 'Ser', 'Gly', 'Protein.length', 'Tyr', 'Aromaticity.Score', 'Alphatic.index']
+
+python feature_ga.py --scale --metric recall
+all feature score: 0.17910447761194029
+max score: 0.26226012793176973
+features: ['Ribosome', 'Interaction.partners', 'Instability.index', 'Enzyme', 'Cys', 'Asp', 'Arg', 'Phe', 'Glu', 'Nucleus', 'Oxygens', 'PI', 'Asn', 'Gln', 'Mitochondria', 'Transmembrane.domain', 'Thr', 'GC.content', 'Trp', 'FOP.Score', 'ER', 'EC.number', 'Pro', 'Lys', 'CAI', 'Tyr', 'Cytoplasm', 'Aromaticity.Score']
+
+python feature_ga.py --scale --metric all
+all feature score: 1.4232288641795794
+max score: 1.6054472542494302
+max precision: 0.52853598014888337
+max accuracy: 0.81425091352009749
+max recall: 0.22707889125799574
+features: ['Nitrogens', 'Val', 'Interaction.partners', 'Sulphurs', 'Gravy.score', 'Ala', 'Asp', 'Signal.peptide', 'Phe', 'Met', 'Nucleus', 'Asn', 'Transmembrane.domain', 'Thr', 'His', 'Trp', 'FOP.Score', 'Essential', 'ER', 'Lys', 'CAI', 'Protein.length', 'Tyr', 'Alphatic.index']
+
+

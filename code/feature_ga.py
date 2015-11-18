@@ -90,11 +90,11 @@ if __name__ == '__main__':
   argparser.add_argument('--metric', help='fitness metric. precision, recall, accuracy, or all',
                          type=str, default='precision')
   argparser.add_argument("--data_file", help="Name of data file",
-                         type=str, default="../data/small_yeast_data.csv", required=False)
+                         type=str, default="../data/large_yeast_data.csv", required=False)
   argparser.add_argument("--train_file", help="Name of train file",
-                         type=str, default="../data/training_data.csv", required=False)
+                         type=str, default="../data/training_data_large.csv", required=False)
   argparser.add_argument("--test_file", help="Name of test file",
-                         type=str, default="../data/testing_data.csv", required=False)
+                         type=str, default="../data/testing_data_large.csv", required=False)
   argparser.add_argument('--scale', help="Scale the data with StandardScale",
                          action="store_true")
   argparser.add_argument('--m_rate', help='Mutation rate',
@@ -119,23 +119,31 @@ if __name__ == '__main__':
   #how many hits in yeast and proks
 
   #add new features to test and train
-  #currently only in small data set
-  for d in train:
-    d[CHRM_AND_POS] = float(d[CHROMOSOME]) + float(d[CHR_POSITION])
-    d[LOC_AND_5_PROKS] = list(compress([10, 20, 30, 40, 50, 60], [d[e] for e in [MITOCHONDRIA, CYTOPLASM, ER, NUCLEUS, VACUOLE, OTHER]]))[0] + float(d[IN_HOW_MANY_OF_5_PROKS])
-    d[YEAST_AND_PROKS] = float(d[IN_HOW_MANY_OF_6_CLOSE_YEAST]) + float(d[IN_HOW_MANY_OF_5_PROKS])
-  for d in test:
-    d[CHRM_AND_POS] = float(d[CHROMOSOME]) + float(d[CHR_POSITION])
-    d[LOC_AND_5_PROKS] = list(compress([10, 20, 30, 40, 50, 60], [d[e] for e in [MITOCHONDRIA, CYTOPLASM, ER, NUCLEUS, VACUOLE, OTHER]]))[0] + float(d[IN_HOW_MANY_OF_5_PROKS])
-    d[YEAST_AND_PROKS] = float(d[IN_HOW_MANY_OF_6_CLOSE_YEAST]) + float(d[IN_HOW_MANY_OF_5_PROKS])
+  #currently only in small data set: chrm, chrm position, vacuole, other, how many proks
+  features = []
+  if args.train_file == '../data/small_yeast_data.csv':
+    for d in train:
+      d[CHRM_AND_POS] = float(d[CHROMOSOME]) + float(d[CHR_POSITION])
+      d[LOC_AND_5_PROKS] = list(compress([10, 20, 30, 40, 50, 60], [d[e] for e in [MITOCHONDRIA, CYTOPLASM, ER, NUCLEUS, VACUOLE, OTHER]]))[0] + float(d[IN_HOW_MANY_OF_5_PROKS])
+      d[YEAST_AND_PROKS] = float(d[IN_HOW_MANY_OF_6_CLOSE_YEAST]) + float(d[IN_HOW_MANY_OF_5_PROKS])
+    for d in test:
+      d[CHRM_AND_POS] = float(d[CHROMOSOME]) + float(d[CHR_POSITION])
+      d[LOC_AND_5_PROKS] = list(compress([10, 20, 30, 40, 50, 60], [d[e] for e in [MITOCHONDRIA, CYTOPLASM, ER, NUCLEUS, VACUOLE, OTHER]]))[0] + float(d[IN_HOW_MANY_OF_5_PROKS])
+      d[YEAST_AND_PROKS] = float(d[IN_HOW_MANY_OF_6_CLOSE_YEAST]) + float(d[IN_HOW_MANY_OF_5_PROKS])
+    #ORF not included
+    features = [MITOCHONDRIA, CYTOPLASM, ER, NUCLEUS, VACUOLE, OTHER, CAI, NC, GC, L_GA, GRAVY, DOV_EXPR, BLAST_HITS_IN_YEAST, INTXN_PARTNERS, CHROMOSOME, CHR_POSITION, INTRON, CLOSE_STOP_RATIO, RARE_AA_RATIO, TM_HELIX, IN_HOW_MANY_OF_5_PROKS, IN_HOW_MANY_OF_6_CLOSE_YEAST, CHRM_AND_POS, LOC_AND_5_PROKS, YEAST_AND_PROKS] 
+  else:
+    #remove NA entries completely
+    train = filter(lambda d: 'NA' not in d.values(), train)
+    test = filter(lambda d: 'NA' not in d.values(), test)
+    features = train[0].keys()
 
+  for d in test:
+    if d[ESSENTIAL] != '1' and d[ESSENTIAL] != '0': print(d, len(d.keys()))
   train_x = [[float(e[f]) for f in e if f != ESSENTIAL and f != ORF] for e in train]
   train_y = [float(e[ESSENTIAL]) for e in train]
   test_x = [[float(e[f]) for f in e if f != ESSENTIAL and f != ORF] for e in test]
   test_y = [float(e[ESSENTIAL]) for e in test]
-
-  #ORF not included
-  features = [MITOCHONDRIA, CYTOPLASM, ER, NUCLEUS, VACUOLE, OTHER, CAI, NC, GC, L_GA, GRAVY, DOV_EXPR, BLAST_HITS_IN_YEAST, INTXN_PARTNERS, CHROMOSOME, CHR_POSITION, INTRON, CLOSE_STOP_RATIO, RARE_AA_RATIO, TM_HELIX, IN_HOW_MANY_OF_5_PROKS, IN_HOW_MANY_OF_6_CLOSE_YEAST, CHRM_AND_POS, LOC_AND_5_PROKS, YEAST_AND_PROKS]
 
   #
   if args.scale:
