@@ -331,7 +331,7 @@ if __name__ == '__main__':
   feature_graphs(all_feature_scores)
 
   if args.write_gens:
-    with open('../logs/small_feature_ga_run_log.txt', 'a') as F:
+    with open('../logs/large_feature_ga_run_log.txt', 'a') as F:
       F.write(args.metric+','+str(args.generations)+','+str(args.pop_size)+','+str(args.m_rate)+'\n') #run info
       for e in gen_maxes:
         F.write(str(e)+'\n')
