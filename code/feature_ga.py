@@ -8,6 +8,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics.classification import precision_score, recall_score, accuracy_score
 from sklearn.preprocessing import StandardScaler
 from itertools import compress
+import matplotlib.pyplot as plt
 
 # Constants for feature names
 ORF = 'ORF'
@@ -82,6 +83,127 @@ def mutate(pop, rate):
     else: new_pop.insert(0, p)
   return new_pop
       
+#
+def feature_graphs(all_feature_scores):
+  small_data = {}
+  large_data = {}
+
+  #this is fairly specific to the exact format of these files. they caould be made more general if necessary
+  with open('../logs/small_feature_ga_run_log.txt', 'r') as small:
+    for m in ['precision', 'accuracy', 'recall', 'all']:
+      small_data[m] = []
+      small.readline() #info line
+      while True:
+        l = small.readline().strip()
+        print('line', l)
+        if l == '***': break
+        small_data[m].append(float(l))
+      small.readline() #empty line
+  with open('../logs/large_feature_ga_run_log.txt', 'r') as large:
+    for m in ['precision', 'accuracy', 'recall', 'all']:
+      large_data[m] = []
+      large.readline() #info line
+      while True:
+        l = large.readline().strip()
+        if l == '***': break
+        large_data[m].append(float(l))
+      large.readline() #empty line
+
+  #graphs
+  #small 
+  plt.plot(range(100), small_data['accuracy'], 'r-', label='Accuracy, all: '+str(all_feature_scores['small']['accuracy'])[:5]+', max: '+str(max(small_data['accuracy']))[:5])
+  plt.plot(range(100), [all_feature_scores['small']['accuracy']]*100, 'r--')#, label='Accuracy all features')
+  plt.plot(range(100), small_data['precision'], 'b-', label='Precision, all: '+str(all_feature_scores['small']['precision'])[:5]+', max: '+str(max(small_data['precision']))[:5])
+  plt.plot(range(100), [all_feature_scores['small']['precision']]*100, 'b--')#, label='Precision all features')
+  plt.plot(range(100), small_data['recall'], 'g-', label='Recall, all: '+str(all_feature_scores['small']['recall'])[:5]+', max: '+str(max(small_data['recall']))[:5])
+  plt.plot(range(100), [all_feature_scores['small']['recall']]*100, 'g--')#, label='Recall all features')
+  axes = plt.gca()
+  axes.set_ylim([0,1.])
+  title = 'Small Data Set: Fitness Over Time'
+  plt.title(title)
+  plt.xlabel('Generation')
+  plt.ylabel('Fitness')
+  plt.legend(loc=4)
+  plt.savefig('../data/graphs/'+title+'.png')
+  plt.show()
+
+  #large
+  plt.plot(range(100), large_data['accuracy'], 'r-', label='Accuracy, all: '+str(all_feature_scores['large']['accuracy'])[:5]+', max: '+str(max(large_data['accuracy']))[:5])
+  plt.plot(range(100), [all_feature_scores['large']['accuracy']]*100, 'r--')#, label='Accuracy all features')
+  plt.plot(range(100), large_data['precision'], 'b-', label='Precision, all: '+str(all_feature_scores['large']['precision'])[:5]+', max: '+str(max(large_data['precision']))[:5])
+  plt.plot(range(100), [all_feature_scores['large']['precision']]*100, 'b--')#, label='Precision all features')
+  plt.plot(range(100), large_data['recall'], 'g-', label='Recall, all: '+str(all_feature_scores['large']['recall'])[:5]+', max: '+str(max(large_data['recall']))[:5])
+  plt.plot(range(100), [all_feature_scores['large']['recall']]*100, 'g--')#, label='Recall all features')
+  axes = plt.gca()
+  axes.set_ylim([0,1.])
+  title = 'Large Data Set: Fitness Over Time'
+  plt.title(title)
+  plt.xlabel('Generation')
+  plt.ylabel('Fitness')
+  plt.legend(loc=4)
+  plt.savefig('../data/graphs/'+title+'.png')
+  plt.show()
+
+  #Small vs large comparisons
+  #accuracy
+  plt.plot(range(100), large_data['accuracy'], 'b-', label='Accuracy Large, all: '+str(all_feature_scores['large']['accuracy'])[:5]+', max: '+str(max(large_data['accuracy']))[:5])
+  plt.plot(range(100), [all_feature_scores['large']['accuracy']]*100, 'b--')#, label='Accuracy all features')
+  plt.plot(range(100), small_data['accuracy'], 'r-', label='Accuracy Small, all: '+str(all_feature_scores['small']['accuracy'])[:5]+', max: '+str(max(small_data['accuracy']))[:5])
+  plt.plot(range(100), [all_feature_scores['small']['accuracy']]*100, 'r--')#, label='Accuracy all features')
+  axes = plt.gca()
+  axes.set_ylim([.7,.85])
+  title = 'Small vs Large Data Set: Accuracy Over Time'
+  plt.title(title)
+  plt.xlabel('Generation')
+  plt.ylabel('Fitness')
+  plt.legend(loc=4)
+  plt.savefig('../data/graphs/'+title+'.png')
+  plt.show()
+
+  #precision
+  plt.plot(range(100), large_data['precision'], 'b-', label='Precision Large, all: '+str(all_feature_scores['large']['precision'])[:5]+', max: '+str(max(large_data['precision']))[:5])
+  plt.plot(range(100), [all_feature_scores['large']['precision']]*100, 'b--')#, label='Precision all features')
+  plt.plot(range(100), small_data['precision'], 'r-', label='Precision, all: '+str(all_feature_scores['small']['precision'])[:5]+', max: '+str(max(small_data['precision']))[:5])
+  plt.plot(range(100), [all_feature_scores['small']['precision']]*100, 'r--')#, label='Precision all features')
+  axes = plt.gca()
+  axes.set_ylim([.35,.6])
+  title = 'Small vs Large Data Set: Precision Over Time'
+  plt.title(title)
+  plt.xlabel('Generation')
+  plt.ylabel('Fitness')
+  plt.legend(loc=4)
+  plt.savefig('../data/graphs/'+title+'.png')
+  plt.show()
+
+  #recall
+  plt.plot(range(100), large_data['recall'], 'b-', label='Recall Large, all: '+str(all_feature_scores['large']['recall'])[:5]+', max: '+str(max(large_data['recall']))[:5])
+  plt.plot(range(100), [all_feature_scores['large']['recall']]*100, 'b--')#, label='Recall all features')
+  plt.plot(range(100), small_data['recall'], 'r-', label='Recall Small, all: '+str(all_feature_scores['small']['recall'])[:5]+', max: '+str(max(small_data['recall']))[:5])
+  plt.plot(range(100), [all_feature_scores['small']['recall']]*100, 'r--')#, label='Recall all features')
+  axes = plt.gca()
+  axes.set_ylim([0, .4])
+  title = 'Small vs Large Data Set: Recall Over Time'
+  plt.title(title)
+  plt.xlabel('Generation')
+  plt.ylabel('Fitness')
+  plt.legend(loc=4)
+  plt.savefig('../data/graphs/'+title+'.png')
+  plt.show()
+
+  #all
+  plt.plot(range(100), large_data['all'], 'b-', label='All Large, all: '+str(all_feature_scores['large']['all'])[:5]+', max: '+str(max(large_data['all']))[:5])
+  plt.plot(range(100), [all_feature_scores['large']['all']]*100, 'b--')#, label='Recall all features')
+  plt.plot(range(100), small_data['all'], 'r-', label='All Small, all: '+str(all_feature_scores['small']['all'])[:5]+', max: '+str(max(small_data['all']))[:5])
+  plt.plot(range(100), [all_feature_scores['small']['all']]*100, 'r--')#, label='Recall all features')
+  axes = plt.gca()
+  axes.set_ylim([1.3,1.65])
+  title = 'Small vs Large Data Set: All Over Time'
+  plt.title(title)
+  plt.xlabel('Generation')
+  plt.ylabel('Fitness')
+  plt.legend(loc=4)
+  plt.savefig('../data/graphs/'+title+'.png')
+  plt.show()
 
 if __name__ == '__main__':
   argparser = argparse.ArgumentParser()
@@ -103,6 +225,8 @@ if __name__ == '__main__':
                          type=int, default=100)
   argparser.add_argument('--pop_size', help='Population size',
                          type=int, default=20)
+  argparser.add_argument('--write_gens', help='Append information from this run to ../log/feature_ga_run_log.txt',
+                         action="store_true")
   args = argparser.parse_args()
 
 
@@ -156,6 +280,8 @@ if __name__ == '__main__':
   model = None
   if args.classifier == 'knn': model = KNeighborsClassifier(n_neighbors=5, algorithm='ball_tree')
 
+  gen_maxes = []
+
   #initialize the population
   print('Initialize Population')
   pop = init_pop(args.pop_size, len(features))
@@ -169,6 +295,7 @@ if __name__ == '__main__':
     fitTot = sum(fits)
     normedFits = [float(x)/fitTot for x in fits]
     print('max fit', max(fits))
+    gen_maxes.append(max(fits))
     #update max
     mIndex = fits.index(max(fits))
     m = (max(fits), pop[mIndex]) if max(fits) > m[0] else m
@@ -191,6 +318,24 @@ if __name__ == '__main__':
   print('all features', 'recall', calc_fit(model, 'recall', train_x, train_y, test_x, test_y, [1]*len(features)))
   print('all features', 'all', calc_fit(model, 'all', train_x, train_y, test_x, test_y, [1]*len(features)))
   print('Done')
+
+  all_feature_scores = {'small':{}, 'large':{}}
+  all_feature_scores['small']['precision'] = 0.51449275362318836
+  all_feature_scores['small']['accuracy'] = 0.78421409214092141
+  all_feature_scores['small']['recall'] = 0.22015503875968992
+  all_feature_scores['small']['all'] = 1.5188618845237998
+  all_feature_scores['large']['precision'] = 0.44327176781002636
+  all_feature_scores['large']['accuracy'] = 0.80085261875761271
+  all_feature_scores['large']['recall'] = 0.17910447761194029
+  all_feature_scores['large']['all'] = 1.4232288641795794
+  feature_graphs(all_feature_scores)
+
+  if args.write_gens:
+    with open('../logs/small_feature_ga_run_log.txt', 'a') as F:
+      F.write(args.metric+','+str(args.generations)+','+str(args.pop_size)+','+str(args.m_rate)+'\n') #run info
+      for e in gen_maxes:
+        F.write(str(e)+'\n')
+      F.write('***\n') 
 
 
 
