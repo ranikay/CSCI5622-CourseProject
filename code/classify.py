@@ -9,6 +9,7 @@ and for classifying and measuring the accuracy of classifications
 
 import argparse
 from csv import DictReader
+import csv
 import numpy as np
 import random
 from sklearn.neighbors import KNeighborsClassifier
@@ -26,34 +27,8 @@ import matplotlib.pyplot as plt
 from itertools import compress
 
 # Constants for feature names
+
 ORF = 'ORF'
-MITOCHONDRIA = 'Mitochondria'
-CYTOPLASM = 'Cytoplasm'
-ER = 'ER'
-NUCLEUS = 'Nucleus'
-VACUOLE = 'Vacuole'
-OTHER = 'Other.location'
-CAI = 'CAI'
-NC = 'NC'
-GC = 'GC.content'
-PROTEIN_LENGTH = 'Protein.length'
-L_GA = 'L_aa'
-GRAVY = 'Gravy'
-DOV_EXPR = 'DovEXPR'
-BLAST_HITS_IN_YEAST = 'BLAST.hits_in_yeast'
-INTERACTION_PARTNERS = 'interaction_partners'
-CHROMOSOME = 'Chromosome'
-CHR_POSITION = 'Chr.position'
-INTRON = 'Intron'
-CLOSE_STOP_RATIO = 'Close.stop_ratio'
-RARE_AA_RATIO = 'Rare.aa_ratio'
-TM_HELIX = 'TM.helix'
-IN_HOW_MANY_OF_5_PROKS = 'in_how_many_of_5_proks'
-IN_HOW_MANY_OF_6_CLOSE_YEAST = 'in_how_many_of_6_close_yeast'
-#added features
-CHRM_AND_POS = 'chrm_and_pos' #chromosome and postion 
-LOC_AND_5_PROKS = 'loc_and_5_proks' #combine location and how many of 5 proks
-YEAST_AND_PROKS = 'yeast_and_proks' #combine the number of matches in yeast and proks
 #label
 ESSENTIAL = 'Essential'
 
@@ -67,6 +42,26 @@ GNB = 'gnb' #Gaussian Naive Bayes
 UNIFORM = 'uniform' #DummyClassifier
 # TODO: Add more classifiers
 
+class classify_args:
+    def __init__(self, data_file="../data/small_yeast_data.csv",
+                 train_file="../data/training_data.csv", 
+                 test_file="../data/testing_data.csv",create_features=False,
+                 classify=False, classifiers=['svm'], kernel = 'rbf',
+                 cross_validate=False, write_to_log=False, features=[],
+                 scale=False, vote='none'):
+        self.data_file = data_file
+        self.train_file = train_file
+        self.test_file = test_file
+        self.create_features = create_features
+        self.classify = classify
+        self.classifiers = classifiers
+        self.kernel = kernel
+        self.cross_validate = cross_validate
+        self.write_to_log = write_to_log
+        self.features = features
+        self.scale = scale
+        self.vote = vote
+
 def write_log(out_file_name, args, classifier, accuracy, precision, recall,
               true_count, actual_count, X_train, X_test, all_features):
     """
@@ -77,17 +72,16 @@ def write_log(out_file_name, args, classifier, accuracy, precision, recall,
     get_kernel = lambda x: x == 'svm' and args.kernel or "NA"
 
     # Log important info
-    log = ['\n'+str(args.data_file),str(args.train_file),str(args.test_file),str(args.create_features),
-           str(classifier), str(get_kernel(classifier)),str(args.scale), str(len(X_train)), str(len(X_test)),
-           str(precision), str(recall), str(accuracy), str(true_count), str(actual_count)]
+    log = [args.data_file,args.train_file,args.test_file,
+           classifier, get_kernel(classifier),args.scale, len(X_train),
+           len(X_test), precision, recall, accuracy, true_count, actual_count]
     # Include a TRUE/FALSE column for each feature
-    log.append('\t'.join([str(feature in args.features) for feature in all_features]))
-    line = "\t".join(log)
+    log += [feature in args.features for feature in all_features]
 
     with open(out_file_name, 'a') as f:
-        f.write(line)
+        out_writer = csv.writer(f, lineterminator='\n')
+        out_writer.writerow(log)
 
-    
 def create_feature_file(source, features, out_file_name, train_file):
     """
     A function to create a feature file
@@ -201,7 +195,8 @@ def svm_classify(train_X, train_Y, test_X, test_Y, kernel, reg):
 
     return clf
 
-def __print_and_log_results(clf, x_train, x_test, y_test, out_file_name, all_features):
+def __print_and_log_results(clf, classifier, x_train, x_test, y_test, out_file_name,
+                            all_features, args):
     predictions = clf.predict(x_test)
     accuracy = accuracy_score(y_test, predictions, [0, 1])
     precision = precision_score(y_test, predictions, [0, 1])
@@ -215,11 +210,10 @@ def __print_and_log_results(clf, x_train, x_test, y_test, out_file_name, all_fea
     print "True count (prediction/actual): " + str(true_count) + "/" + str(actual_count)
     if args.write_to_log:
     # Write out results as a table to log file
-        write_log(out_file_name = out_file_name, args = args,
-                    classifier = classifier, accuracy = accuracy,
-                    precision = precision, recall = recall,
-                    true_count = true_count, actual_count = actual_count,
-                    X_train = x_train, X_test = test_X, all_features = all_features)
+        write_log(out_file_name=out_file_name, args=args, classifier=classifier,
+                    accuracy=accuracy, precision=precision, recall=recall,
+                    true_count=true_count, actual_count=actual_count,
+                    X_train=x_train, X_test=x_test, all_features=all_features)
 
 def __get_classifier_model(classifier, args):
     """
@@ -269,40 +263,9 @@ def __get_classifier_model(classifier, args):
         model = VotingClassifier(estimators=clfs, voting=args.vote)
 
     return model
-        
 
-if __name__ == '__main__':
-    argparser = argparse.ArgumentParser()
-    argparser.add_argument("--data_file", help="Name of data file",
-                           type=str, default="../data/small_yeast_data.csv", 
-                           required=False)
-    argparser.add_argument("--train_file", help="Name of train file",
-                           type=str, default="../data/training_data.csv", required=False)
-    argparser.add_argument("--test_file", help="Name of test file",
-                           type=str, default="../data/testing_data.csv", required=False)
-    argparser.add_argument("--create_features", help="Create a training file",
-                           action="store_true")
-    argparser.add_argument("--classify", help="Classify using training and test set",
-                           action="store_true")
-    argparser.add_argument("--classifiers", help="A list of classifiers to use",
-                           nargs='+', required=False, default = ['svm'])
-    argparser.add_argument("--metrics", help="A list of metrics to use",
-                           nargs='+', required=False)
-    argparser.add_argument("--kernel", help="The kernel to be used for SVM classification",
-                           type=str, default='rbf')
-    # Is this option needed if we're using training and test files?
-    argparser.add_argument("--cross_validate", help="Cross validate using training and test set",
-                           action="store_true")
-    argparser.add_argument("--write_to_log", help="Send output to log file",
-                           action="store_true")
-    argparser.add_argument("--features", help="Features to be used",
-                           nargs='+', required=True)
-    argparser.add_argument("--scale", help="Scale the data with StandardScale",
-                           action="store_true")
-    argparser.add_argument("--vote", help="Ensemble classifier. 'hard' = majority, 'soft' = average",
-                           type=str, default='none')
-    args = argparser.parse_args()
 
+def main(args):
     voting_methods = ['none', 'hard', 'soft']
     assert args.vote in voting_methods, "--vote must be one of 'none', 'hard', 'soft'"
     
@@ -352,14 +315,22 @@ if __name__ == '__main__':
             scaler = StandardScaler()
             x_train = scaler.fit_transform(x_train)
             x_test = scaler.fit_transform(x_test)
-
-        # Train classifier
-        for classifier in args.classifiers:
-            # TODO: Add some way to specify options for classifiers
-            model = __get_classifier_model(classifier, args)
+        
+        if args.vote == 'none':
+            for classifier in args.classifiers:
+                model = __get_classifier_model(classifier, args)
+                clf = model.fit(x_train, y_train)
+                print "Using classifier " + classifier
+                __print_and_log_results(clf, classifier, x_train, x_test, y_test,
+                                        out_file_name, all_features, args)
+        else:
+            model = __get_classifier_model('none',args)
             clf = model.fit(x_train, y_train)
-            print "Using classifier " + classifier
-            __print_and_log_results(clf, x_train, x_test, y_test, out_file_name, all_features)
+            print "Using classifier: vote "+ args.vote + " with ", args.classifiers
+            classifier = "vote-" + args.vote + "-with-classifiers_"
+            classifier += "_".join(args.classifiers)
+            __print_and_log_results(clf, classifier, x_train, x_test, y_test,
+                                    out_file_name, all_features, args)
     
     elif args.cross_validate:
 
@@ -384,17 +355,55 @@ if __name__ == '__main__':
         X_train, X_test, y_train, y_test = cross_validation.train_test_split \
             (x_train,labels, test_size=0.1, random_state=13)
         if args.scale:
-            scaler = StandardScaler()
-            X_train = scaler.fit_transform(X_train)
-            X_test = scaler.fit_transform(X_test)
+            scaler = StandardScaler().fit(X_train)
+            X_train = scaler.transform(X_train)
+            X_test = scaler.transform(X_test)
         if args.vote == 'none':
             for classifier in args.classifiers:
                 model = __get_classifier_model(classifier, args)
                 clf = model.fit(X_train, y_train)
                 print "Using classifier " + classifier
-                __print_and_log_results(clf, X_train, X_test, y_test, out_file_name, all_features)
+                __print_and_log_results(clf, classifier, X_train, X_test, y_test,
+                                        out_file_name, all_features, args)
         else:
             model = __get_classifier_model('none',args)
             clf = model.fit(X_train, y_train)
             print "Using classifier: vote "+ args.vote + " with ", args.classifiers
-            __print_and_log_results(clf, X_train, X_test, y_test, out_file_name, all_features)
+            classifier = "vote-" + args.vote + "-with-classifiers_"
+            classifier += "_".join(args.classifiers)
+            __print_and_log_results(clf, classifier, X_train, X_test, y_test, out_file_name,
+                                    all_features, args)
+    
+if __name__ == '__main__':
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument("--data_file", help="Name of data file",
+                           type=str, default="../data/small_yeast_data.csv", 
+                           required=False)
+    argparser.add_argument("--train_file", help="Name of train file",
+                           type=str, default="../data/training_data.csv", required=False)
+    argparser.add_argument("--test_file", help="Name of test file",
+                           type=str, default="../data/testing_data.csv", required=False)
+    argparser.add_argument("--create_features", help="Create a training file",
+                           action="store_true")
+    argparser.add_argument("--classify", help="Classify using training and test set",
+                           action="store_true")
+    argparser.add_argument("--classifiers", help="A list of classifiers to use",
+                           nargs='+', required=False, default = ['svm'])
+    argparser.add_argument("--metrics", help="A list of metrics to use",
+                           nargs='+', required=False)
+    argparser.add_argument("--kernel", help="The kernel to be used for SVM classification",
+                           type=str, default='rbf')
+    # Is this option needed if we're using training and test files?
+    argparser.add_argument("--cross_validate", help="Cross validate using training and test set",
+                           action="store_true")
+    argparser.add_argument("--write_to_log", help="Send output to log file",
+                           action="store_true")
+    argparser.add_argument("--features", help="Features to be used",
+                           nargs='+', required=True)
+    argparser.add_argument("--scale", help="Scale the data with StandardScale",
+                           action="store_true")
+    argparser.add_argument("--vote", help="Ensemble classifier. 'hard' = majority, 'soft' = average",
+                           type=str, default='none')
+    args = argparser.parse_args()
+    
+    main(args)

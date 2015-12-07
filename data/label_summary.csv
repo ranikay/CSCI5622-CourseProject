@@ -1,0 +1,4 @@
+file_name,num_pos_labels,perc_pos_labels,num_neg_labels,perc_neg_labels
+large_yeast_data.csv,1100,0.19090593543908366,4662,0.8090940645609164
+data/training_data_large.csv,162,0.1937799043062201,674,0.80622009569378
+data/testing_data_large.csv,938,0.1904181892001624,3988,0.8095818107998376
