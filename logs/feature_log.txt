@@ -73,4 +73,30 @@ max accuracy: 0.81425091352009749
 max recall: 0.22707889125799574
 features: ['Nitrogens', 'Val', 'Interaction.partners', 'Sulphurs', 'Gravy.score', 'Ala', 'Asp', 'Signal.peptide', 'Phe', 'Met', 'Nucleus', 'Asn', 'Transmembrane.domain', 'Thr', 'His', 'Trp', 'FOP.Score', 'Essential', 'ER', 'Lys', 'CAI', 'Protein.length', 'Tyr', 'Alphatic.index']
 
+#########################################
+###Flipped Training and Test Set Sizes###
+#########################################
+
+python feature_ga.py --scale --metric precision
+all feature score: 0.62820512820512819
+max score: 0.68354430379746833
+features: ['Nitrogens', 'Ribosome', 'Interaction.partners', 'Enzyme', 'Ala', 'Cys', 'Asp', 'Hydrogens', 'Signal.peptide', 'Arg', 'Phe', 'Glu', 'Met', 'Nucleus', 'Oxygens', 'Asn', 'Ile', 'Codon.Bias', 'Mitochondria', 'Transmembrane.domain', 'Coiled.coil', 'Thr', 'FOP.Score', 'Ser', 'Transcript.length', 'Pro', 'CAI', 'Tyr', 'Cytoplasm', 'Alphatic.index']
+
+python feature_ga.py --scale --metric accuracy
+all feature score: 0.83014354066985641
+max score: 0.84449760765550241
+features: ['Nitrogens', 'Val', 'Ribosome', 'Interaction.partners', 'Sulphurs', 'Gravy.score', 'Ala', 'Hydrogens', 'Phe', 'Glu', 'Met', 'Nucleus', 'Leu', 'PI', 'Asn', 'Strand', 'Mitochondria', 'Thr', 'His', 'Trp', 'Essential', 'ER', 'EC.number', 'Ser', 'Transcript.length', 'Tyr', 'Cytoplasm']
+
+python feature_ga.py --scale --metric recall
+all feature score: 0.30246913580246915
+max score: 0.35802469135802467
+features: ['Val', 'Interaction.partners', 'Instability.index', 'Enzyme', 'Ala', 'Cys', 'Arg', 'Nucleus', 'Leu', 'PI', 'Asn', 'Gln', 'Mitochondria', 'Transmembrane.domain', 'Coiled.coil', 'GC.content', 'Trp', 'FOP.Score', 'ER', 'Ser', 'Gly', 'Transcript.length', 'Pro', 'CAI', 'Protein.length', 'Tyr', 'Cytoplasm', 'Alphatic.index']
+
+python feature_ga.py --scale --metric all
+all feature score: 1.7608178046774539
+max score: 1.8901766200011814
+max precision: 0.69999999999999996
+max accuracy: 0.84449760765550241
+max recall: 0.34567901234567899
+features: ['Nitrogens', 'Interaction.partners', 'Enzyme', 'Ala', 'Cys', 'Hydrogens', 'Arg', 'Phe', 'Met', 'Nucleus', 'Oxygens', 'Strand', 'Gln', 'Codon.Bias', 'Mitochondria', 'Transmembrane.domain', 'Thr', 'Mw', 'His', 'Trp', 'FOP.Score', 'Essential', 'ER', 'Gly', 'Lys', 'CAI', 'Tyr', 'Cytoplasm', 'Aromaticity.Score', 'Alphatic.index']
 
