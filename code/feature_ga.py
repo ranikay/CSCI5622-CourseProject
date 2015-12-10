@@ -214,9 +214,9 @@ if __name__ == '__main__':
   argparser.add_argument("--data_file", help="Name of data file",
                          type=str, default="../data/large_yeast_data.csv", required=False)
   argparser.add_argument("--train_file", help="Name of train file",
-                         type=str, default="../data/training_data_large.csv", required=False)
+                         type=str, default="../data/testing_data_large.csv", required=False) #flip train and test. should be ~ 80/20
   argparser.add_argument("--test_file", help="Name of test file",
-                         type=str, default="../data/testing_data_large.csv", required=False)
+                         type=str, default="../data/training_data_large.csv", required=False)
   argparser.add_argument('--scale', help="Scale the data with StandardScale",
                          action="store_true")
   argparser.add_argument('--m_rate', help='Mutation rate',
@@ -260,7 +260,8 @@ if __name__ == '__main__':
     #remove NA entries completely
     train = filter(lambda d: 'NA' not in d.values(), train)
     test = filter(lambda d: 'NA' not in d.values(), test)
-    features = train[0].keys()
+    #also remove ORF if present
+    features = [f for f in train[0].keys() if f != 'ORF']
 
   for d in test:
     if d[ESSENTIAL] != '1' and d[ESSENTIAL] != '0': print(d, len(d.keys()))
@@ -328,7 +329,7 @@ if __name__ == '__main__':
   all_feature_scores['large']['accuracy'] = 0.80085261875761271
   all_feature_scores['large']['recall'] = 0.17910447761194029
   all_feature_scores['large']['all'] = 1.4232288641795794
-  feature_graphs(all_feature_scores)
+  #feature_graphs(all_feature_scores)
 
   if args.write_gens:
     with open('../logs/large_feature_ga_run_log.txt', 'a') as F:

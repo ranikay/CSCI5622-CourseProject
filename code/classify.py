@@ -23,6 +23,7 @@ from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import VotingClassifier
 #from mlxtend.classifier import EnsembleClassifier
 from sklearn.metrics import precision_score, recall_score, accuracy_score
+from sklearn.cross_validation import KFold
 import matplotlib.pyplot as plt
 from itertools import compress
 
@@ -48,7 +49,7 @@ class classify_args:
                  test_file="../data/testing_data.csv",create_features=False,
                  classify=False, classifiers=['svm'], kernel = 'rbf',
                  cross_validate=False, write_to_log=False, features=[],
-                 scale=False, vote='none'):
+                 scale=False, vote='none', kfold=False):
         self.data_file = data_file
         self.train_file = train_file
         self.test_file = test_file
@@ -61,6 +62,7 @@ class classify_args:
         self.features = features
         self.scale = scale
         self.vote = vote
+        self.kfold = kfold
 
 def write_log(out_file_name, args, classifier, accuracy, precision, recall,
               true_count, actual_count, X_train, X_test, all_features):
@@ -270,9 +272,9 @@ def main(args):
     assert args.vote in voting_methods, "--vote must be one of 'none', 'hard', 'soft'"
     
     if 'small_yeast_data' in args.data_file:
-        out_file_name = '../logs/small_yeast_data_log.txt'
+        out_file_name = '../logs/small_yeast_data_log.csv'
     if 'large_yeast_data' in args.data_file:
-        out_file_name = '../logs/large_yeast_data_log.txt'
+        out_file_name = '../logs/large_yeast_data_log.csv'
 
     if args.classify:
         # Store column names as features, except ORF and Essential
@@ -352,8 +354,9 @@ def main(args):
             train_features.append(train_feat)
         x_train = np.array(train_features, dtype=float)
         rand_int = random.randint(1, len(data))
-        X_train, X_test, y_train, y_test = cross_validation.train_test_split \
-            (x_train,labels, test_size=0.1, random_state=13)
+        #X_train, X_test, y_train, y_test = cross_validation.train_test_split (x_train,labels, test_size=0.1, random_state=13)
+        X_train, X_test, y_train, y_test = cross_validation.train_test_split (x_train,labels, test_size=0.1)
+        
         if args.scale:
             scaler = StandardScaler().fit(X_train)
             X_train = scaler.transform(X_train)
@@ -373,6 +376,54 @@ def main(args):
             classifier += "_".join(args.classifiers)
             __print_and_log_results(clf, classifier, X_train, X_test, y_test, out_file_name,
                                     all_features, args)
+    elif args.kfold:
+
+        # Store column names as features, except ORF and Essential
+        all_features = DictReader(open(args.data_file, 'rU')).fieldnames
+        all_features.remove('ORF')
+        all_features.remove('Essential')
+        # Cast to list to keep it all in memory
+        data = list(DictReader(open(args.data_file, 'rU')))
+        
+        labels = []
+        for line in data:
+            labels.append(int(line[ESSENTIAL]))
+        labels = np.array(labels, dtype=float)
+        train_features = []
+        for example in data:
+            train_feat = []
+            for feature in args.features:
+                train_feat.append(example[feature])
+            train_features.append(train_feat)
+        X = np.array(train_features, dtype=float)
+        rand_int = random.randint(1, len(data))
+        #X_train, X_test, y_train, y_test = cross_validation.train_test_split (x_train,labels, test_size=0.1, random_state=13)
+        #X_train, X_test, y_train, y_test = cross_validation.train_test_split (x_train,labels, test_size=0.1)
+        kf = KFold(len(X), n_folds=10, shuffle=True, random_state=42)
+        for train, test in kf:
+            print "kfold loop iterate"
+            X_train, X_test, y_train, y_test = X[train], X[test], labels[train], labels[test]
+        
+            if args.scale:
+                scaler = StandardScaler().fit(X_train)
+                X_train = scaler.transform(X_train)
+                X_test = scaler.transform(X_test)
+            if args.vote == 'none':
+                for classifier in args.classifiers:
+                    model = __get_classifier_model(classifier, args)
+                    clf = model.fit(X_train, y_train)
+                    print "Using classifier " + classifier
+                    __print_and_log_results(clf, classifier, X_train, X_test, y_test,
+                                            out_file_name, all_features, args)
+            else:
+                model = __get_classifier_model('none',args)
+                clf = model.fit(X_train, y_train)
+                print "Using classifier: vote "+ args.vote + " with ", args.classifiers
+                classifier = "vote-" + args.vote + "-with-classifiers_"
+                classifier += "_".join(args.classifiers)
+                __print_and_log_results(clf, classifier, X_train, X_test, y_test, out_file_name,
+                                        all_features, args)
+        print "kfold loop done"
     
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
@@ -395,6 +446,8 @@ if __name__ == '__main__':
                            type=str, default='rbf')
     # Is this option needed if we're using training and test files?
     argparser.add_argument("--cross_validate", help="Cross validate using training and test set",
+                           action="store_true")
+    argparser.add_argument("--kfold", help="10-fold cross validation",
                            action="store_true")
     argparser.add_argument("--write_to_log", help="Send output to log file",
                            action="store_true")
