@@ -38,7 +38,7 @@ def __classify_all_features(main_args):
             feature_sets.append(list(combination))
     print "Length of all combinations: " + str(len(feature_sets))
     for feature_set in feature_sets:
-        classify_args = classify.classify_args(features=feature_set,
+        classify_args = classify.ClassifyArgs(features=feature_set,
                                                classifiers=ALL_CLASSIFIERS,
                                                write_to_log=True,
                                                train_file=main_args.train_file,
@@ -47,7 +47,7 @@ def __classify_all_features(main_args):
                                                classify=main_args.classify,
                                                kfold=main_args.kfold)
         classify.main(classify_args)
-        classify_args = classify.classify_args(features=feature_set,
+        classify_args = classify.ClassifyArgs(features=feature_set,
                                                classifiers=ALL_CLASSIFIERS,
                                                write_to_log=True,
                                                train_file=main_args.train_file,
