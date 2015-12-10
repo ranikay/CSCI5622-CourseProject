@@ -36,21 +36,39 @@ if __name__ == '__main__':
         for c in chosen:
             feature_sets.append(list(c))
     print "Length of all combinations: " + str(len(feature_sets))
+##    for feature_set in feature_sets:
+##        args = classify.classify_args(features=feature_set,
+##                                      classifiers=ALL_CLASSIFIERS,
+##                                      write_to_log=True, 
+##                                      train_file="../data/testing_data_large.csv",
+##                                      test_file="../data/training_data_large.csv",
+##                                      data_file='large_yeast_data.csv',
+##                                      classify=True)
+##        classify.main(args)
+##        args = classify.classify_args(features=feature_set,
+##                                      classifiers=ALL_CLASSIFIERS,
+##                                      write_to_log=True, 
+##                                      train_file="../data/testing_data_large.csv",
+##                                      test_file="../data/training_data_large.csv",
+##                                      data_file='large_yeast_data.csv',
+##                                      vote='hard',
+##                                      classify=True)
+##        classify.main(args)
+
     for feature_set in feature_sets:
+        print "feature set loop iterate"
         args = classify.classify_args(features=feature_set,
                                       classifiers=ALL_CLASSIFIERS,
                                       write_to_log=True, 
-                                      train_file="../data/testing_data_large.csv",
-                                      test_file="../data/training_data_large.csv",
-                                      data_file='large_yeast_data.csv',
-                                      classify=True)
+                                      data_file='../data/large_yeast_data.csv',
+                                      kfold=True)
         classify.main(args)
         args = classify.classify_args(features=feature_set,
                                       classifiers=ALL_CLASSIFIERS,
                                       write_to_log=True, 
-                                      train_file="../data/testing_data_large.csv",
-                                      test_file="../data/training_data_large.csv",
-                                      data_file='large_yeast_data.csv',
+                                      data_file='../data/large_yeast_data.csv',
                                       vote='hard',
-                                      classify=True)
+                                      kfold=True)
         classify.main(args)
+    print "feature set loop done"
+        
