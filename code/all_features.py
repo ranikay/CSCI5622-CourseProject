@@ -8,7 +8,7 @@ import sys
 from numpy.random import choice
 import itertools
 
-ALL_FEATURES = ["Transcript.length", "Strand", "GC.content", "Enzyme", 
+ALL_FEATURES = ["Transcript.length", "Strand", "GC.content", "Enzyme",
                 "SEG.low.complexity", "Transmembrane.domain", "Signal.peptide",
                 "Coiled.coil", "Nucleus", "Mitochondria", "ER", "Cytoplasm",
                 "Ribosome", "Interaction.partners", "Mw", "PI", "Protein.length",
