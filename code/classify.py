@@ -207,7 +207,7 @@ def __print_and_log_results(clf, classifier, x_train, x_test, y_test, out_file_n
                     accuracy=accuracy, precision=precision, recall=recall,
                     true_count=true_count, actual_count=actual_count,
                     X_train=x_train, X_test=x_test, all_features=all_features,
-                    predict_hash)
+                    predict_hash=predict_hash)
     if args.write_predictions:
         __write_predictions(predict_hash, predictions, y_test)
 
