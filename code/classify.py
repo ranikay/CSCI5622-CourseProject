@@ -212,10 +212,10 @@ def __print_and_log_results(clf, classifier, x_train, x_test, y_test, out_file_n
         __write_predictions(predict_hash, predictions, y_test)
 
 def __write_predictions(predict_hash, predictions, actuals):
-    with open('predictions.csv', 'a') as predict_file:
+    with open('../logs/predictions.csv', 'a') as predict_file:
         predict_writer = csv.writer(predict_file)
         for prediction, orf, actual in zip(predictions, orfs, actuals):
-            predict_writer.writerow(hash, orf, prediction, actual)
+            predict_writer.writerow([predict_hash, orf, prediction, actual])
 
 def __get_classifier_model(classifier, args):
     """

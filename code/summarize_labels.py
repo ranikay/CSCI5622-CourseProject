@@ -25,7 +25,7 @@ if __name__ == '__main__':
         else:
             pos_labels += 1
     data_file.close()
-    data_summary_file = open('data/label_summary.csv', 'a')
+    data_summary_file = open('../data/label_summary.csv', 'a')
     all_labels = pos_labels + neg_labels
     pos_percentage = float(pos_labels)/float(all_labels)
     neg_percentage = float(neg_labels)/float(all_labels)
