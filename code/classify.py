@@ -50,7 +50,7 @@ class ClassifyArgs(object):
                  test_file="../data/testing_data.csv",classify=False,
                  classifiers=None, kernel='rbf', cross_validate=False,
                  write_to_log=False, features=None, scale=False, vote='none',
-                 kfold=False):
+                 kfold=False, write_predictions=False):
         self.data_file = data_file
         self.train_file = train_file
         self.test_file = test_file
@@ -69,6 +69,7 @@ class ClassifyArgs(object):
         self.scale = scale
         self.vote = vote
         self.kfold = kfold
+        self.write_predictions = write_predictions
     
     def __repr__(self):
         str_list = [self.data_file, self.train_file, self.test_file,
