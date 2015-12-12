@@ -25,8 +25,9 @@ from sklearn.metrics import precision_score, recall_score, accuracy_score
 from sklearn.cross_validation import KFold
 import matplotlib.pyplot as plt
 
-# Constants for feature names
+orfs = []
 
+# Constants for feature names
 ORF = 'ORF'
 # label
 ESSENTIAL = 'Essential'
@@ -68,9 +69,17 @@ class ClassifyArgs(object):
         self.scale = scale
         self.vote = vote
         self.kfold = kfold
+    
+    def __repr__(self):
+        str_list = [self.data_file, self.train_file, self.test_file,
+                    self.classify, self.kernel, self.cross_validate, self.scale,
+                    self.vote, self.kfold]
+        str_list += self.features
+        return "_".join([str(x) for x in str_list])
 
 def write_log(out_file_name, args, classifier, accuracy, precision, recall,
-              true_count, actual_count, X_train, X_test, all_features):
+              true_count, actual_count, X_train, X_test, all_features,
+              predict_hash):
     """
     Function to write results of a run to a file.
     """
@@ -78,7 +87,7 @@ def write_log(out_file_name, args, classifier, accuracy, precision, recall,
     get_kernel = lambda x: x == 'svm' and args.kernel or "NA"
 
     # Log important info
-    log = [args.data_file, args.train_file, args.test_file,
+    log = [predict_hash, args.data_file, args.train_file, args.test_file,
            classifier, get_kernel(classifier), args.scale, len(X_train),
            len(X_test), precision, recall, accuracy, true_count, actual_count]
     # Include a TRUE/FALSE column for each feature
@@ -187,12 +196,26 @@ def __print_and_log_results(clf, classifier, x_train, x_test, y_test, out_file_n
     true_count = len([1 for p in predictions if p == 1])
     actual_count = len([1 for y in y_test if y == 1])
     print "True count (prediction/actual): " + str(true_count) + "/" + str(actual_count)
+    
+    # Create a unique hash for this particular classification
+    unique_predict_string = classifier + "_"
+    unique_predict_string += str(args)
+    predict_hash = hash(unique_predict_string)
     if args.write_to_log:
     # Write out results as a table to log file
         write_log(out_file_name=out_file_name, args=args, classifier=classifier,
                     accuracy=accuracy, precision=precision, recall=recall,
                     true_count=true_count, actual_count=actual_count,
-                    X_train=x_train, X_test=x_test, all_features=all_features)
+                    X_train=x_train, X_test=x_test, all_features=all_features,
+                    predict_hash)
+    if args.write_predictions:
+        __write_predictions(predict_hash, predictions, y_test)
+
+def __write_predictions(predict_hash, predictions, actuals):
+    with open('predictions.csv', 'a') as predict_file:
+        predict_writer = csv.writer(predict_file)
+        for prediction, orf, actual in zip(predictions, orfs, actuals):
+            predict_writer.writerow(hash, orf, prediction, actual)
 
 def __get_classifier_model(classifier, args):
     """
@@ -275,13 +298,15 @@ def main(args):
                 train_feat.append(example[feature])
             train_features.append(train_feat)
         x_train = np.array(train_features, dtype=float)
-
+        
         test_features = []
         for example in test:
             test_feature = []
             for feature in args.features:
                 test_feature.append(example[feature])
             test_features.append(test_feature)
+            global orfs
+            orfs.append(example[ORF])
         x_test = np.array(test_features, dtype=float)
 
         y_train = np.array([int(x[ESSENTIAL]) for x in train])
@@ -425,6 +450,8 @@ if __name__ == '__main__':
     argparser.add_argument("--features", help="Features to be used",
                            nargs='+', required=True)
     argparser.add_argument("--scale", help="Scale the data with StandardScale",
+                           action="store_true")
+    argparser.add_argument("--write_predictions", help="Write the predictions to a file",
                            action="store_true")
     argparser.add_argument("--vote",
                            help="Ensemble classifier. 'hard' = majority, 'soft' = average",

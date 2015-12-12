@@ -10,7 +10,7 @@ import argparse
 import itertools
 import classify
 
-ALL_FEATURES = ["Transcript.length", "Strand", "GC.content", "Enzyme",
+LARGE_ALL_FEATURES = ["Transcript.length", "Strand", "GC.content", "Enzyme",
                 "SEG.low.complexity", "Transmembrane.domain", "Signal.peptide",
                 "Coiled.coil", "Nucleus", "Mitochondria", "ER", "Cytoplasm",
                 "Ribosome", "Interaction.partners", "Mw", "PI", "Protein.length",
@@ -20,6 +20,14 @@ ALL_FEATURES = ["Transcript.length", "Strand", "GC.content", "Enzyme",
                 "Thr", "Val", "Trp", "Tyr", "Carbons", "Hydrogens", "Nitrogens",
                 "Oxygens", "Sulphurs", "Instability.index", "Alphatic.index",
                 "EC.number"]
+
+SMALL_ALL_FEATURES = ["Mitochondria", "Cytoplasm", "ER", "Nucleus", "Vacuole",
+                    "Other.location", "CAI", "NC", "GC.content",
+                    "Protein.length", "Gravy.score", "DovEXPR", 
+                    "BLAST.hits_in_yeast", "Interaction.partners", "Chromosome",
+                    "Chr.position", "Intron", "Close.stop.ratio", 
+                    "Rare.aa_ratio", "TM.helix", "in_how_many_of_5_proks", 
+                    "in_how_many_of_6_close_yeast"]
 
 ALL_CLASSIFIERS = ['log_reg', 'svm', 'ada_boost', 'knn', 'gnb']
 
@@ -32,8 +40,11 @@ def __classify_all_features(main_args):
                     other arguments relative to the task
     """
     feature_sets = []
+    all_features = SMALL_ALL_FEATURES
+    if "large_yeast_data" in args.data_file:
+        all_features = LARGE_ALL_FEATURES
     for i in range(args.feature_min - 1, main_args.feature_max, 1):
-        combinations = itertools.combinations(ALL_FEATURES, i + 1)
+        combinations = itertools.combinations(all_features, i + 1)
         for combination in combinations:
             feature_sets.append(list(combination))
     print "Length of all combinations: " + str(len(feature_sets))
