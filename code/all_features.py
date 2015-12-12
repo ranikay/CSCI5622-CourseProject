@@ -32,7 +32,7 @@ def __classify_all_features(main_args):
                     other arguments relative to the task
     """
     feature_sets = []
-    for i in range(args.features_min - 1, main_args.features_max, 1):
+    for i in range(args.feature_min - 1, main_args.feature_max, 1):
         combinations = itertools.combinations(ALL_FEATURES, i + 1)
         for combination in combinations:
             feature_sets.append(list(combination))
@@ -64,7 +64,7 @@ if __name__ == '__main__':
     argparser.add_argument("--classify", help="Classify using training and test set",
                            action="store_true")
     argparser.add_argument("--kfold", help="10-fold cross validation",
-                           action="store_true")
+                           action="store_true", default=False)
     argparser.add_argument("--feature_min", help="Minimum number of features",
                            type=int, default=49)
     argparser.add_argument("--feature_max", help="Maximum number of features",
@@ -80,7 +80,6 @@ if __name__ == '__main__':
                            required=False)
     argparser.add_argument("--vote",
                            help="Ensemble classifier. 'hard' = majority, 'soft' = average",
-                           type=str, default='none')
+                           type=str, default='hard')
     args = argparser.parse_args()
     __classify_all_features(args)
-

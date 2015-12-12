@@ -266,7 +266,7 @@ def main(args):
         labels = []
         for line in train:
             if line[ESSENTIAL] not in labels:
-                labels.append(line[ESSENTIAL])
+                labels.append(int(line[ESSENTIAL]))
 
         train_features = []
         for example in train:
@@ -284,11 +284,9 @@ def main(args):
             test_features.append(test_feature)
         x_test = np.array(test_features, dtype=float)
 
-        y_train = np.array(list(labels.index(x[ESSENTIAL])
-                         for x in train))
+        y_train = np.array([int(x[ESSENTIAL]) for x in train])
 
-        y_test = np.array(list(labels.index(x[ESSENTIAL])
-                         for x in test))
+        y_test = np.array([int(x[ESSENTIAL]) for x in test])
 
         if args.scale:
             scaler = StandardScaler()
@@ -433,4 +431,3 @@ if __name__ == '__main__':
                            type=str, default='none')
     args = argparser.parse_args()
     main(args)
-
