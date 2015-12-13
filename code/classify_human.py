@@ -71,15 +71,10 @@ if __name__ == '__main__':
     human_data = list(DictReader(open('../data/human_data.csv', 'r')))
     feature_set = [k for k in human_data[0].keys() if k != 'name' and k != 'Essential']
 
-<<<<<<< HEAD
   #since there are only 8 features that the yeast and human data sets have in common, no need to filter the feature set
   #simply run the classifier on the human set and view the results
   #Note that only 6 genes are considered essential for MCF7
   #print(sum([1 if e['Essential'] == '1' else 0 for e in human_data])) #6
-=======
-    # since there are only 5 features that the yeast and human data sets have in common, no need to filter the feature set
-    # simply run the classifier on the human set and view the results
->>>>>>> 10662075d8b6cd10219268de1c227c84b57d3ebc
 
     args = classify.ClassifyArgs(features=feature_set,
                                 classifiers=ALL_CLASSIFIERS,
