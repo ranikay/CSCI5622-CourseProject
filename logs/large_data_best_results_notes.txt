@@ -1,0 +1,42 @@
+Notes on large_yeast_data_log.csv:
+For search of all features, down to all features - 3:
+
+- Many results where precision or recall are 100%, but this is because the classifier
+simply guessed all positive or nearly all negative
+
+- For recall of 100%, where everything was classified as positive, this occurred almost
+exclusively with logistic regression. In fact, logistic regression was associated with
+the highest recall scores, because it tended to classify the majority of the examples as
+essential
+
+- 100% precision was mostly associated with the voting classifier using logistic regression,
+gnb, knn, SVM, and AdaBoost, and using a hard vote (i.e., majority). There were also some
+examples of logistic regression producing a precision of 100%
+
+There were almost three times as many results with 100% precision as there were with
+100% recall. Typical example looked like this:
+
+Train_Size	Test_Size	Precision	Recall		Accuracy	True_Count	Actual_Count
+4926		836			1			0.037037037	0.813397129	6			162
+
+In this example, only six essential genes were predicted out of the total of 162. However,
+all of the predicted genes were in fact essential, thus the precision of 100%.
+
+- There were also tens of thousands of examples where the classifier simply classified
+everything as the majority class, which was non-essential. This gave an accuracy of 
+approximately 80.6%, because that was the proportion of negative examples. The recall and
+precision were obviously 0% for these examples. This was the most common outcome and was
+mostly associated with SVM and logistic regression. There were also some examples where
+the classifier predicted a small number of positive examples, but they were all wrong.
+
+- The KNN classifier mostly produced very evenly poor results (i.e., low precision, recall,
+and accuracy), but was not the absolute worst for any given metric.
+
+Comparing classifiers: AdaBoost had the best performance when considering all metrics,
+logistic regression produced the best recall results, and the voting classifier did best
+with precision. GNB has poor recall and precision results, but decent (around 70ish)
+accuracy. SVM was mostly associated with guessing all negative classes.
+
+I chose the best 11 results to do a deep dive on (see if the results could be improved).
+By best, I chose the balance between recall and precision. So I didn't go with high recall
+scores where the majority of the classifications were positive. 
