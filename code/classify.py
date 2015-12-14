@@ -21,7 +21,8 @@ from sklearn.svm import SVC
 from sklearn import cross_validation
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import VotingClassifier
-from sklearn.metrics import precision_score, recall_score, accuracy_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import precision_score, recall_score, accuracy_score, roc_auc_score
 from sklearn.cross_validation import KFold
 import matplotlib.pyplot as plt
 
@@ -190,10 +191,12 @@ def __print_and_log_results(clf, classifier, x_train, x_test, y_test, out_file_n
     accuracy = accuracy_score(y_test, predictions, [0, 1])
     precision = precision_score(y_test, predictions, [0, 1])
     recall = recall_score(y_test, predictions, [0, 1])
+    auc_score = roc_auc_score(y_test, predictions, None)
     print "Train/test set sizes: " + str(len(x_train)) + "/" + str(len(x_test))
     print "Precision is: " + str(precision)
     print "Recall is: " + str(recall)
     print "Accuracy is: " + str(accuracy)
+    print "AUC ROC Score is: " + str(auc_score)
     true_count = len([1 for p in predictions if p == 1])
     actual_count = len([1 for y in y_test if y == 1])
     print "True count (prediction/actual): " + str(true_count) + "/" + str(actual_count)
@@ -233,9 +236,9 @@ def __get_classifier_model(classifier, args):
 
     # Make SGD Logistic Regression model the default
     if args.vote == 'none':
-        model = SGDClassifier(loss='log', penalty='l2', shuffle=True)
+        model = SGDClassifier(loss='log', penalty='l2', shuffle=True, n_iter=5)
         if classifier == LOG_REG:
-            model = SGDClassifier(loss='log', penalty='l2', shuffle=True)
+            model = SGDClassifier(loss='log', penalty='l2', shuffle=True, n_iter=5)
         elif classifier == SVM:
             model = SVC(kernel=args.kernel)
         elif classifier == ADA_BOOST:
@@ -275,7 +278,7 @@ def main(args):
     if 'small_yeast_data' in args.data_file:
         out_file_name = '../logs/small_yeast_data_log.csv'
     if 'large_yeast_data' in args.data_file:
-        out_file_name = '../logs/large_yeast_data_log.csv'
+        out_file_name = '../logs/large_yeast_data_best_results_log.csv'
 
     if args.classify:
         # Store column names as features, except ORF and Essential
